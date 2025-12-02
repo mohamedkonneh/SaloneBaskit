@@ -1,0 +1,19 @@
+{
+  "name": "salonebaskit-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+    "postinstall": "npm install --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "styled-components": "^6.1.19",
+    "web-push": "^3.6.7"
+  }
+}
