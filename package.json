@@ -6,8 +6,7 @@
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
-    "postinstall": "npm install --workspaces"
+    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -152,15 +152,7 @@ const HomePage = () => {
             </section>
 
             <section style={styles.section(isMobile)}>
-              <FeaturedProductsCarousel products={products.slice(0, 8)} title="Top Picks For You" />
-            </section>
-
-            <section style={styles.section(isMobile)}>
               <DynamicProductShowcase products={allProducts} title="Discover Our Range" />
-                           <section style={styles.section(isMobile)}>
-              <LandscapeProductsCarousel products={highlightedProducts} title="Today's Highlights" />
-            </section>
-
             </section>
           </>
         )}
