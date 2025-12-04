@@ -9,7 +9,7 @@ const HelpCenterPage = () => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const { data } = await api.get('/content/help');
+        const { data } = await api.get('/api/content/help');
         setPageData(data);
       } catch (error) {
         console.error("Failed to load page content", error);

@@ -58,7 +58,7 @@ const AccountPage = () => {
       const formData = new FormData();
       formData.append('image', avatarFile);
       try {
-        const { data } = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         avatarUrl = data.image;
       } catch (uploadError) {
         toast.error('Image upload failed.');
@@ -68,7 +68,7 @@ const AccountPage = () => {
 
     // 2. Update user profile with new name and/or avatar URL
     try {
-      const { data } = await api.put('/users/profile', { name, avatar_url: avatarUrl });
+      const { data } = await api.put('/api/users/profile', { name, avatar_url: avatarUrl });
       
       // Update the user context with the new data using the correct function
       updateUserInfo(data);

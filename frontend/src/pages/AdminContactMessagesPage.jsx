@@ -18,7 +18,7 @@ const AdminContactMessagesPage = () => {
     const fetchMessages = async () => {
       try {
         // Use the 'api' instance; the token is added automatically by the interceptor.
-        const { data } = await api.get('/contact');
+        const { data } = await api.get('/api/contact');
         setMessages(data);
       } catch (err) {
         setError('Could not fetch messages.');

@@ -22,7 +22,7 @@ const AdminSuppliersPage = () => {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/suppliers');
+      const { data } = await api.get('/api/suppliers');
       setSuppliers(data);
     } catch (err) {
       setError('Could not fetch suppliers.');
@@ -52,7 +52,7 @@ const AdminSuppliersPage = () => {
 
   const confirmDelete = async () => {
     try {
-      await api.delete(`/suppliers/${supplierToDelete}`);
+      await api.delete(`/api/suppliers/${supplierToDelete}`);
       fetchSuppliers();
     } catch (err) {
       setError('Could not delete supplier.');
@@ -73,9 +73,9 @@ const AdminSuppliersPage = () => {
 
     try {
       if (editingSupplier) {
-        await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
+        await api.put(`/api/suppliers/${editingSupplier.id}`, supplierData);
       } else {
-        await api.post('/suppliers', supplierData);
+        await api.post('/api/suppliers', supplierData);
       }
       fetchSuppliers();
     } catch (error) {

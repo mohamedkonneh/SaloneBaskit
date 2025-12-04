@@ -15,7 +15,7 @@ const AdminUserListPage = () => {
   const fetchUsers = async () => {
     try {
       // Use the 'api' instance; the token is added automatically by the interceptor.
-      const { data } = await api.get('/users');
+      const { data } = await api.get('/api/users');
       setUsers(data);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred fetching users.');
@@ -41,7 +41,7 @@ const AdminUserListPage = () => {
   const confirmDelete = async () => {
     try {
       // Use the 'api' instance; the token is added automatically by the interceptor.
-      await api.delete(`/users/${userToDelete}`);
+      await api.delete(`/api/users/${userToDelete}`);
       fetchUsers(); // Refresh the user list
     } catch (err) {
       setError('Could not delete user.');

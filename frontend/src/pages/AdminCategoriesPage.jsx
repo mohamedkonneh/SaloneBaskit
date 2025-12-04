@@ -27,7 +27,7 @@ const AdminCategoriesPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/categories');
+      const { data } = await api.get('/api/categories');
       setCategories(data);
     } catch (err) {
       setError('Could not fetch categories.');
@@ -57,7 +57,7 @@ const AdminCategoriesPage = () => {
   const confirmDelete = async () => {
     try {
       // The token is added automatically by the interceptor
-      await api.delete(`/categories/${categoryToDelete}`);
+      await api.delete(`/api/categories/${categoryToDelete}`);
       fetchCategories();
     } catch (err) {
       setError('Could not delete category.');
@@ -76,9 +76,9 @@ const AdminCategoriesPage = () => {
     e.preventDefault();
     try {
       if (editingCategory) {
-        await api.put(`/categories/${editingCategory.id}`, formState);
+        await api.put(`/api/categories/${editingCategory.id}`, formState);
       } else {
-        await api.post('/categories', formState);
+        await api.post('/api/categories', formState);
       }
       fetchCategories();
     } catch (err) {

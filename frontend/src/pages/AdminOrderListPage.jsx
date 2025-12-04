@@ -16,7 +16,7 @@ const AdminOrderListPage = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/orders');
+      const { data } = await api.get('/api/orders');
       setOrders(data);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred fetching orders.');
@@ -37,7 +37,7 @@ const AdminOrderListPage = () => {
   const handleStatusChange = async (orderId, newStatus, adminNote) => {
     try {
       // Note: The adminNote is passed from the modal, but here we just pass the existing one
-      await api.put(`/orders/${orderId}/status`, { status: newStatus, admin_note: adminNote });
+      await api.put(`/api/orders/${orderId}/status`, { status: newStatus, admin_note: adminNote });
       toast.success(`Order #${orderId} status updated.`);
       fetchOrders(); // Refresh the order list
     } catch (error) {
@@ -47,7 +47,7 @@ const AdminOrderListPage = () => {
 
   const viewOrderDetails = async (orderId) => {
     try {
-      const { data } = await api.get(`/orders/${orderId}`);
+      const { data } = await api.get(`/api/orders/${orderId}`);
       setSelectedOrder(data);
       setIsModalOpen(true);
     } catch (error) {

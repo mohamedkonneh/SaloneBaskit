@@ -21,7 +21,7 @@ const AdminContentPage = () => {
       if (!selectedPage) return;
       setLoading(true);
       try {
-        const { data } = await api.get(`/content/${selectedPage}`);
+        const { data } = await api.get(`/api/content/${selectedPage}`);
         setContent(data.content);
       } catch (error) {
         toast.error(`Failed to load content for ${selectedPage}`);
@@ -35,7 +35,7 @@ const AdminContentPage = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.put(`/content/${selectedPage}`, { content });
+      await api.put(`/api/content/${selectedPage}`, { content });
       toast.success('Content saved successfully!');
     } catch (error) {
       toast.error('Failed to save content.');

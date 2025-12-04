@@ -38,7 +38,7 @@ const AdminProductListPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/products'); // Use api instance
+      const { data } = await api.get('/api/products'); // Use api instance
       setProducts(data);
     } catch (err) {
       setError('Could not fetch products.');
@@ -50,8 +50,8 @@ const AdminProductListPage = () => {
   const fetchDropdownData = async () => {
     try {
       const [catRes, supRes] = await Promise.all([
-        api.get('/categories'), // Use api instance
-        api.get('/suppliers')    // Use api instance
+        api.get('/api/categories'), // Use api instance
+        api.get('/api/suppliers')    // Use api instance
       ]);
       setCategories(catRes.data);
       setSuppliers(supRes.data);
@@ -144,7 +144,7 @@ const AdminProductListPage = () => {
 
   const confirmDelete = async () => {
     try {
-      await api.delete(`/products/${productToDelete}`); // Use api instance
+      await api.delete(`/api/products/${productToDelete}`); // Use api instance
       fetchProducts();
     } catch (err) {
       setError('Could not delete product.');
@@ -168,7 +168,7 @@ const AdminProductListPage = () => {
       }
       try {
         // The interceptor adds Authorization. We only need to specify Content-Type for file uploads.
-        const { data } = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         uploadedImageUrls = data.imageUrls; // Get the array of URLs from the server
       } catch (uploadError) {
         setError('Image upload failed.');
@@ -190,9 +190,9 @@ const AdminProductListPage = () => {
       };
 
       if (editingProduct) {
-        await api.put(`/products/${editingProduct.id}`, productData);
+        await api.put(`/api/products/${editingProduct.id}`, productData);
       } else {
-        await api.post('/products', productData);
+        await api.post('/api/products', productData);
       }
       fetchProducts();
     } catch (err) {
