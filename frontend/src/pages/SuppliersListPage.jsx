@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import publicApi from '../api/publicApi'; // Import the new public API instance
 import { FaStore, FaChevronRight, FaTags } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
 import ProductCard from '../components/ProductCard';
@@ -26,8 +25,8 @@ const SuppliersListPage = () => {
     const fetchData = async () => {
       try {
         const [suppliersRes, categoriesRes] = await Promise.all([
-          publicApi.get('/suppliers'),  // Use publicApi
-          publicApi.get('/categories') // Use publicApi
+          api.get('/api/suppliers'),
+          api.get('/api/categories')
         ]);
         setSuppliers(suppliersRes.data);
         setCategories(categoriesRes.data);
@@ -59,7 +58,7 @@ const SuppliersListPage = () => {
       try {
         setLoadingProducts(true);
         setError('');
-        const { data } = await api.get(`/products/supplier/${selectedSupplierId}`);
+        const { data } = await api.get(`/api/products/supplier/${selectedSupplierId}`);
         setProducts(data);
       } catch (err) {
         setError('Could not fetch products for this supplier.');
