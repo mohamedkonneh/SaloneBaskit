@@ -51,7 +51,7 @@ const CartPage = () => {
         // setRecommendedProducts(data);
 
         // For now, we'll fetch all products and filter them on the frontend.
-        const { data: allProducts } = await api.get('/products');
+        const { data: allProducts } = await api.get('/api/products');
         const cartProductIds = new Set(cartItems.map(item => item.id));
         
         const recommendations = allProducts.filter(p => 

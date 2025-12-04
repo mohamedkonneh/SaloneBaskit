@@ -18,7 +18,7 @@ const RegisterPage = () => {
     }
     try {
       // Use the api instance. The baseURL is already configured.
-      const { data } = await api.post('/users/register', { name, email, password });
+      const { data } = await api.post('/api/users/register', { name, email, password });
       updateUserInfo(data);
       navigate('/'); // Redirect to home page after registration
     } catch (err) {

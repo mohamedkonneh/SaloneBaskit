@@ -19,8 +19,8 @@ const SupplierPage = () => {
         setLoading(true);
         // Use the 'api' instance for all calls. The interceptor will handle the token.
         const [supRes, prodRes] = await Promise.all([
-          api.get(`/suppliers/${supplierId}`),
-          api.get(`/products/supplier/${supplierId}`)
+          api.get(`/api/suppliers/${supplierId}`),
+          api.get(`/api/products/supplier/${supplierId}`)
         ]);
         
         setSupplier(supRes.data);

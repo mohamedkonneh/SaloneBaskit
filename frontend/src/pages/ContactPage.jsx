@@ -41,7 +41,7 @@ const ContactPage = () => {
       const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
       const submissionData = { ...formData, phone: fullPhoneNumber };
 
-      const { data } = await api.post('/contact', submissionData);
+      const { data } = await api.post('/api/contact', submissionData);
       toast.success(data.message || 'Message sent successfully!');
       setIsSubmitted(true); // Show the success message
     } catch (error) {

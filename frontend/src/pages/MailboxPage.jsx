@@ -14,7 +14,7 @@ const MailboxPage = () => {
     const fetchReplies = async () => {
       try {
         // Use the 'api' instance; the token is added automatically by the interceptor.
-        const { data } = await api.get('/users/mailbox');
+        const { data } = await api.get('/api/users/mailbox');
         setReplies(data);
       } catch (err) {
         setError('Could not fetch your messages.');

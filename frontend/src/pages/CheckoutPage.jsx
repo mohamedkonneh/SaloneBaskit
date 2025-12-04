@@ -64,7 +64,7 @@ const CheckoutPage = () => {
         paymentMethod: paymentMethod,
         totalPrice: total,
       };
-      const { data } = await api.post('/orders', orderData);
+      const { data } = await api.post('/api/orders', orderData);
 
       toast.success('Order placed successfully!');
       clearCart();

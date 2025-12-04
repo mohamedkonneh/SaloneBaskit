@@ -16,7 +16,7 @@ const CategoryProductPage = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const productsRes = await api.get('/products');
+        const productsRes = await api.get('/api/products');
 
         const filtered = productsRes.data.filter(p => p.category === categoryName);
         setProducts(filtered);

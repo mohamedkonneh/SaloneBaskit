@@ -20,9 +20,9 @@ const ProductDetailsPage = () => {
         setLoading(true);
         // Fetch current product, all categories, and all products in parallel
         const [productRes, categoriesRes, allProductsRes] = await Promise.all([
-          api.get(`/products/${productId}`),
-          api.get('/categories'),
-          api.get('/products')
+          api.get(`/api/products/${productId}`),
+          api.get('/api/categories'),
+          api.get('/api/products')
         ]);
 
         const currentProduct = productRes.data;

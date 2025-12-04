@@ -13,7 +13,7 @@ const MyOrdersPage = () => {
     const fetchMyOrders = async () => {
       try {
         // Use the 'api' instance; the token is added automatically by the interceptor.
-        const { data } = await api.get('/orders/myorders');
+        const { data } = await api.get('/api/orders/myorders');
         setOrders(data);
       } catch (err) {
         setError('Could not fetch your orders.');

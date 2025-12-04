@@ -34,8 +34,8 @@ const HomePage = ({ searchTerm }) => { // Only receive the searchTerm prop
       try {
         // Fetch products and categories in parallel
         const [productsRes, categoriesRes] = await Promise.all([
-          api.get('/products'), 
-          api.get('/categories')
+          api.get('/api/products'), 
+          api.get('/api/categories')
         ]);
         setAllProducts(productsRes.data);
         setProducts(productsRes.data);

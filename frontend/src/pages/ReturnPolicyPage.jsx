@@ -15,7 +15,7 @@ const ReturnPolicyPage = () => {
 
     const fetchContent = async () => {
       try {
-        const { data } = await api.get('/content/return-policy');
+        const { data } = await api.get('/api/content/return-policy');
         setPageData(data);
       } catch (error) {
         console.error("Failed to load page content", error);
