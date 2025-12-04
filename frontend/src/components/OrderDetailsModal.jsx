@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const OrderDetailsModal = ({ isOpen, onClose, order, isAdminView = false, onSaveChanges }) => {
   const [note, setNote] = useState('');

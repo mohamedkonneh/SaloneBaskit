@@ -7,7 +7,7 @@ import { useSettings } from '../context/SettingsContext'; // Import settings hoo
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
 import FeaturedProductsCarousel from './FeaturedProductsCarousel'; // Import the carousel
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/500x500/e9ecef/6c757d?text=No+Image'; 
 
 // A mapping of color names to valid CSS color codes.

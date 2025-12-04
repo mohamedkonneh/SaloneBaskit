@@ -9,7 +9,7 @@ import MailboxPage from './MailboxPage'; // Import the new MailboxPage
 import NotificationSettings from '../components/NotificationSettings'; // Import the new component
 import SettingsPage from './SettingsPage'; // Import the new SettingsPage
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const AccountPage = () => {
   const { userInfo, updateUserInfo, logout } = useAuth(); // Use updateUserInfo to update context

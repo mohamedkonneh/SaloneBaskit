@@ -2,7 +2,7 @@ import React from 'react';
 import { FaTimes, FaStar } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x400/e9ecef/6c757d?text=No+Image';
 
 const QuickViewModal = ({ product, onClose }) => {

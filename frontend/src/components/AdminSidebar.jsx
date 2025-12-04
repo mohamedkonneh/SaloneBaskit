@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FaTachometerAlt, FaBoxOpen, FaUsers, FaClipboardList, FaSignOutAlt, FaTruck, FaTags, FaUserCircle, FaFileAlt, FaCommentDots } from 'react-icons/fa';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const AdminSidebar = ({ isOpen }) => {
   const { userInfo, logout } = useAuth();

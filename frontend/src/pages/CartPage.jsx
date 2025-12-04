@@ -7,7 +7,7 @@ import RecommendedProducts from '../components/RecommendedProducts'; // Import t
 import api from '../api/axiosConfig';
 import { useSettings } from '../context/SettingsContext'; // Import settings hook
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();

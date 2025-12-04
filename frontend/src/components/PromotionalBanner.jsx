@@ -8,7 +8,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // A palette of vibrant colors for the text
 const nameColors = ['#FFFFFF', '#81D4FA', '#FFCC80', '#A5D6A7', '#CE93D8'];
@@ -80,7 +80,7 @@ const PromotionalBanner = () => {
   useEffect(() => {
     const fetchPromoProducts = async () => {
       try {
-        const { data } = await api.get('/products/promotions');
+        const { data } = await api.get('/api/products/promotions');
         // Add mock seasonal promotion for demonstration
         const seasonalPromo = {
           id: 'seasonal-1',

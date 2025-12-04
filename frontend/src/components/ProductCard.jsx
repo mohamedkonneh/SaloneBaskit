@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext'; // Import the settings hook
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300/e9ecef/6c757d?text=No+Image';
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const ProductCard = ({ product, onQuickView }) => {
   const [isHovered, setIsHovered] = useState(false);
