@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
-    "build": "npm install -ws && npm run db:migrate --workspace=backend && npm run build --workspace=frontend",
+    "build": "npm install --workspaces && npm run db:migrate --workspace=backend && npm run build --workspace=frontend",
     "start": "npm start --workspace=backend"
   },
   "devDependencies": {

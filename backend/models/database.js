@@ -1,4 +1,7 @@
-const db = require('../src/config/db');
+const { Pool } = require('pg');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const createTables = async () => {
   const createTablesQuery = `
@@ -134,7 +137,7 @@ const createTables = async () => {
 
   try {
     console.log('Starting database migration...');
-    await db.query(createTablesQuery);
+    await pool.query(createTablesQuery);
     console.log('Database migration completed successfully.');
   } catch (err) {
     console.error('Error during database migration:', err);
@@ -142,7 +145,7 @@ const createTables = async () => {
     process.exit(1);
   } finally {
     // It's important to end the connection pool, otherwise the script might hang
-    await db.end();
+    await pool.end();
     console.log('Database connection closed.');
   }
 };
