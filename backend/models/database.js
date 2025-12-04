@@ -1,9 +1,7 @@
 const { Pool } = require('pg');
 const path = require('path');
 
-// When running this script on Render, it will be in the 'backend' workspace.
-// dotenv will automatically find the .env file in the root of this workspace.
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../src/.env') });
 
 const isProduction = process.env.NODE_ENV === 'production';
 
