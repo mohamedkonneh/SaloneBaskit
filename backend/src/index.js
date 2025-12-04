@@ -20,8 +20,14 @@ const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
+// Define allowed origins. Use an environment variable for the production frontend URL.
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  process.env.FRONTEND_URL, // Production frontend
+];
+
 // --- Middleware ---
-app.use(cors()); // Allows your frontend to talk to this backend
+app.use(cors({ origin: allowedOrigins })); // Configure CORS for specific origins
 app.use(express.json()); // Allows the server to understand JSON data
 
 // --- Serve Static Files (like uploaded images) ---

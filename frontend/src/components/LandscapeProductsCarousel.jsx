@@ -64,7 +64,7 @@ const LandscapeProductsCarousel = ({ products, title }) => {
 
 const styles = {
   container: { margin: 0, overflow: 'hidden' }, // Removed margin
-  title: { fontSize: '0.9rem', fontWeight: 'bold', color: '#333', marginBottom: '25px', paddingLeft: '20px' },
+  title: { fontSize: '0.9rem', fontWeight: 'bold', color: '#333', marginBottom: '15px', paddingLeft: '20px' },
   slideWrapper: { padding: '0 12px' },
 };
 

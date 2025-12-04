@@ -4,6 +4,7 @@ import api from '../api/axiosConfig'; // Import the configured Axios instance
 import ProductCard from '../components/ProductCard'; 
 import PromotionalBanner from '../components/PromotionalBanner'; 
 import FeaturedProductsCarousel from '../components/FeaturedProductsCarousel';
+import CategoryCircles from '../components/CategoryCircles'; // Import the new component
 import QuickViewModal from '../components/QuickViewModal';
 import LandscapeProductsCarousel from '../components/LandscapeProductsCarousel';
  
@@ -15,12 +16,11 @@ import DynamicProductShowcase from '../components/DynamicProductShowcase';
 import VideoCard from '../components/VideoCard'; 
 import WelcomeSplashScreen from '../components/WelcomeSplashScreen';
 
-const HomePage = () => {
+const HomePage = ({ searchTerm }) => { // Only receive the searchTerm prop
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]); 
   const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory] = useState('all'); // Removed unused setSelectedCategory
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showSplash, setShowSplash] = useState(true);
@@ -101,6 +101,11 @@ const HomePage = () => {
           <PromotionalBanner />
         </section>
 
+        <section style={styles.section(isMobile)}>
+          <h2 style={styles.sectionTitle(isMobile)}>Shop by Category</h2>
+          <CategoryCircles categories={categories} />
+        </section>
+
 <section style={styles.section(isMobile)}>
               <FeaturedProductsCarousel products={products.slice(0, 8)} title="Top Picks For You" />
             </section>
@@ -110,7 +115,7 @@ const HomePage = () => {
         ) : (
           <>
             <section style={styles.section(isMobile)}>
-              <h2 style={styles.sectionTitle(isMobile)}>Live From Our Studio</h2>
+              <h2 style={styles.sectionTitle(isMobile)}>Latest Deals</h2>
               <div style={styles.livePromoContainer(isMobile)}>
                 <VideoCard 
                   videoUrl="https://www.youtube.com/watch?v=hWVJucr3Il8&pp=ygUOcHJvZHVjdCBhZHZlcnQ%3D" 
@@ -153,6 +158,12 @@ const HomePage = () => {
 
             <section style={styles.section(isMobile)}>
               <DynamicProductShowcase products={allProducts} title="Discover Our Range" />
+
+  <section style={styles.section(isMobile)}>
+              <FeaturedProductsCarousel products={products.slice(0, 8)} title="Recomended For You" />
+            </section>
+
+
             </section>
           </>
         )}

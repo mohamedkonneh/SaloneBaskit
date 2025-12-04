@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import Header from '../components/Header';
+ 
+import styles from './ProductDetailsPage.module.css'; // Import CSS Module
 import ProductDetailsCard from '../components/ProductDetailsCard';
-import ProductCard from '../components/ProductCard';
-import QuickViewModal from '../components/QuickViewModal';
+import FeaturedProductsCarousel from '../components/FeaturedProductsCarousel';
 
 const ProductDetailsPage = () => {
   const { productId } = useParams();
@@ -13,7 +13,6 @@ const ProductDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,34 +44,18 @@ const ProductDetailsPage = () => {
     fetchData();
   }, [productId]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return ( // No change needed here, it's a public page.
-    <div style={styles.page}>
-      <Header categories={categories} />
-      {/* Inject a style tag to handle the scrollbar pseudo-element */}
-      <style>{`
-        .category-nav-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+    <div className={styles.page}>
       {/* Category Navigation Bar */}
-      <div className="category-nav-scroll" style={styles.categoryNav}>
+      <div className={styles.categoryNav}>
         {categories.map(cat => (
-          <Link to={`/categories/${cat.name}`} key={cat.id} style={styles.categoryLink}>
+          <Link to={`/categories/${cat.name}`} key={cat.id} className={styles.categoryLink}>
             {cat.name}
           </Link>
         ))}
       </div>
 
-      <main style={styles.main(isMobile)}>
+      <main className={styles.main}>
         {loading ? (
           <p>Loading...</p>
         ) : error ? (
@@ -81,69 +64,13 @@ const ProductDetailsPage = () => {
           <>
             <ProductDetailsCard product={product} />
             {relatedProducts.length > 0 && (
-              <div style={styles.relatedSection}>
-                <h2 style={styles.relatedTitle}>You Might Also Like</h2>
-                <div style={styles.relatedGrid}>
-                  {relatedProducts.map(p => (
-                    <Link to={`/product/${p.id}`} key={p.id} style={{ textDecoration: 'none' }}>
-                      <ProductCard product={p} />
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              <FeaturedProductsCarousel products={relatedProducts} title="You Might Also Like" />
             )}
           </>
         )}
       </main>
     </div>
   );
-};
-
-const styles = {
-  page: {
-    backgroundColor: '#f4f6f9',
-    minHeight: '100vh',
-  },
-  main: (isMobile) => ({
-    maxWidth: '1200px',
-    margin: isMobile ? '20px auto' : '40px auto',
-    padding: '0 20px',
-  }),
-  categoryNav: {
-    display: 'flex',
-    justifyContent: 'flex-start', // Align items to the start for scrolling
-    flexWrap: 'nowrap', // Prevent wrapping
-    gap: '10px',
-    padding: '15px',
-    backgroundColor: 'white',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    overflowX: 'auto', // Enable horizontal scrolling
-    scrollbarWidth: 'none', // For Firefox - this works as a direct property
-  },
-  categoryLink: {
-    textDecoration: 'none',
-    color: '#333',
-    backgroundColor: '#f0f2f5',
-    padding: '8px 15px',
-    borderRadius: '20px',
-    fontSize: '0.9rem',
-    fontWeight: '500',
-    whiteSpace: 'nowrap', // Prevent text from wrapping inside the link
-    transition: 'background-color 0.2s',
-  },
-  relatedSection: {
-    marginTop: '60px',
-  },
-  relatedTitle: {
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-    marginBottom: '25px',
-  },
-  relatedGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '25px',
-  },
 };
 
 export default ProductDetailsPage;

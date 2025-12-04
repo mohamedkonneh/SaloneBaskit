@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 
-const BACKEND_URL = 'http://localhost:5000';
+// Use Vite's environment variables to define the backend URL for images.
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/250x250/e9ecef/6c757d?text=...';
 
 // --- Local CustomFeaturedCard Component ---
@@ -20,7 +21,6 @@ const CustomFeaturedCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAddToCart = (e) => {
-    e.preventDefault();
     e.stopPropagation();
     console.log(`Added ${product.name} to cart.`);
     // TODO: Add to cart logic
@@ -110,7 +110,7 @@ const FeaturedProductsCarousel = ({ products, title }) => {
 
 const styles = {
   container: (isMobile) => ({
-    backgroundColor: '#eef6ff', // A nice, light blue background
+    backgroundColor: 'rgba(238, 246, 255, 1)', // A nice, light blue background
     padding: isMobile ? '0 15px' : '0 40px', // Removed top/bottom padding
     margin: 0, // Removed margin
     borderRadius: '16px',

@@ -127,7 +127,7 @@ const Header = ({ categories, searchTerm, onSearchChange, selectedCategory, onCa
 
 const styles = {
   header: (isMobile) => ({
-    backgroundColor: '#FF7043', // Modern orange background
+    backgroundColor: '#3e31b7ff', // Modern orange background
     padding: isMobile ? '8px 15px' : '12px 20px', // Reduced padding
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     position: 'sticky',
@@ -148,7 +148,7 @@ const styles = {
     alignItems: 'center',
   },
   logo: (isMobile) => ({
-    fontSize: isMobile ? '1.5rem' : '1.8rem',
+    fontSize: isMobile ? '0.5rem' : '1.8rem',
     fontWeight: 'bold',
     color: 'white', // Changed for contrast
     margin: 0,

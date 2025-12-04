@@ -104,8 +104,8 @@ const ProductCard = ({ product, onQuickView }) => {
 
 const styles = {
   card: (isMobile) => ({
-    backgroundColor: 'white',
-    borderRadius: '6px', // Reduced border radius for a sharper look
+    backgroundColor: 'none',
+    borderRadius: '4px', // Reduced border radius for a sharper look
     overflow: 'hidden', // Keep overflow hidden
     transition: 'transform 0.3s ease, box-shadow 0.3s ease', // Smoother transition
     cursor: 'pointer',
@@ -116,7 +116,7 @@ const styles = {
     width: '100%',
     paddingTop: '80%', // Further reduced to make the card more compact
     position: 'relative',
-    backgroundColor: '#f4f4f4',
+    backgroundColor: 'none',
   },
   wishlistButton: {
     position: 'absolute',
