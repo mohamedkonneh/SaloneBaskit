@@ -1,0 +1,8 @@
+# This file provides build settings for Netlify.
+# It instructs Netlify on how to build the frontend of your monorepo.
+
+[build]
+  # This is the command Netlify will run to build your frontend.
+  command = "npm run build --workspace=frontend"
+  # This is the directory that contains the built static files.
+  publish = "frontend/dist"
