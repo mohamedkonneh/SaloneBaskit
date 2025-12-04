@@ -21,13 +21,24 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 
 // Define allowed origins. Use an environment variable for the production frontend URL.
-const allowedOrigins = [
-  'http://localhost:5173', // Local development
-  process.env.FRONTEND_URL, // Production frontend
-];
+const allowedOrigins = ['http://localhost:5173'];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
 
 // --- Middleware ---
-app.use(cors({ origin: allowedOrigins })); // Configure CORS for specific origins
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+        // or if the origin is in our allowed list.
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+}));
 app.use(express.json()); // Allows the server to understand JSON data
 
 // --- Serve Static Files (like uploaded images) ---

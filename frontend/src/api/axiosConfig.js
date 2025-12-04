@@ -2,12 +2,12 @@
 import axios from 'axios';
 
 // Vite exposes environment variables on the `import.meta.env` object
-const baseURL = import.meta.env.VITE_API_BASE_URL
-  ? `${import.meta.env.VITE_API_BASE_URL}/api`
-  : 'http://localhost:5000/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const API = axios.create({
-  baseURL: baseURL,
+  // The base URL for all API requests. The '/api' part will be in the specific calls.
+  // Example: API.get('/api/products')
+  baseURL: baseURL, 
 });
 
 API.interceptors.request.use((req) => {
