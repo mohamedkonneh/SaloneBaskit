@@ -1,7 +1,14 @@
 const { Pool } = require('pg');
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+// When running this script on Render, it will be in the 'backend' workspace.
+// dotenv will automatically find the .env file in the root of this workspace.
+require('dotenv').config();
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const isProduction = process.env.NODE_ENV === 'production';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
+});
 
 const createTables = async () => {
   const createTablesQuery = `
