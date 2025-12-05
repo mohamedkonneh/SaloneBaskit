@@ -156,5 +156,8 @@ const createTables = async () => {
   }
 };
 
-// This makes the script run itself when you execute `node database.js`
-createTables();
+// This check ensures the script only runs when executed directly
+// (e.g., `node backend/models/database.js`), not when imported.
+if (require.main === module) {
+  createTables();
+}
