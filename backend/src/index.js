@@ -1,4 +1,5 @@
-require('dotenv').config();
+// Load environment variables from .env file
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const http = require('http');
 const path = require('path'); 
@@ -78,7 +79,7 @@ initSocket(server);
 const startServer = async () => {
   try {
     // You can add a check here to ensure DB is connected if db.query is available
-    await db.query('SELECT NOW()');
+    await db.query('SELECT NOW()'); // This pings the database
     console.log('Database connected successfully.');
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
