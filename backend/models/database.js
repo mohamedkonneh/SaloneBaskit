@@ -1,10 +1,4 @@
 const { Pool } = require('pg');
-const path = require('path');
-
-// Explicitly point to the .env file in the root of the 'backend' directory.
-// This path navigates from the current file (`models/database.js`) up one level
-// to the `backend` directory, and then looks for the `.env` file.
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const isProduction = process.env.NODE_ENV === 'production';
 
