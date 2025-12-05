@@ -1,7 +1,10 @@
 const { Pool } = require('pg');
 const path = require('path');
 
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+// Explicitly point to the .env file in the root of the 'backend' directory.
+// This is the most reliable path for Render's build environment.
+const envPath = path.resolve(process.cwd(), '.env');
+require('dotenv').config({ path: envPath });
 
 const isProduction = process.env.NODE_ENV === 'production';
 
