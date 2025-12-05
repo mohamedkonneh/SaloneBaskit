@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 
-const VAPID_PUBLIC_KEY = 'BJqgLb9eBsdbQPwfPvSb_bU9194ALApm7Puvt_kT0pu78iev6zvsO47dSUDZPX9Xom6VWVrZrUUsDBwQz-76MjA'; // Replace with your actual VAPID public key
+const VAPID_PUBLIC_KEY = process.env.REACT_APP_VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - base64String.length % 4) % 4);

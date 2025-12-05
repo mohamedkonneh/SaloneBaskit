@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const path = require('path');
+const path = require('path'); 
 const cors = require('cors'); 
 const db = require('./config/db'); // Import the database connection
 const { initSocket } = require('./socket'); // Import the socket initializer
@@ -17,6 +17,10 @@ const contentRoutes = require('./routes/contentRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const pushRoutes = require('./routes/pushRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+
+// --- Error Handler Middleware ---
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+
 
 const app = express();
 
@@ -61,7 +65,11 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/chat', chatRoutes);
 
-const PORT = process.env.PORT || 5000;
+// --- Error Handling Middleware (should be last) ---
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 10000;
 
 // Create HTTP server and initialize Socket.IO
 const server = http.createServer(app);

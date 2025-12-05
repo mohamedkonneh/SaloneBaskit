@@ -62,6 +62,11 @@ const createTables = async () => {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Add password_hash to users table if it doesn't exist for backward compatibility
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+    -- If new users must have a password, you might want to alter existing rows
+    -- For example: UPDATE users SET password_hash = 'some_default_placeholder' WHERE password_hash IS NULL;
+
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
