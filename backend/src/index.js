@@ -1,8 +1,10 @@
-// Load environment variables from .env file
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const http = require('http');
 const path = require('path'); 
+
+// Load environment variables from .env file at the project root
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
 const cors = require('cors'); 
 const db = require('./config/db'); // Import the database connection
 const { initSocket } = require('./socket'); // Import the socket initializer
@@ -21,7 +23,6 @@ const chatRoutes = require('./routes/chatRoutes');
 
 // --- Error Handler Middleware ---
 const { notFound, errorHandler } = require('./errorMiddleware');
-
 
 const app = express();
 
