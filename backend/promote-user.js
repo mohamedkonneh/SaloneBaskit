@@ -33,7 +33,12 @@ const promoteUser = async () => {
     process.exit(1); // Exit with failure code
   } finally {
     // Close the database connection pool
-    db.getPool().end();
+    // Using end() will shut down the pool for the entire application.
+    // For a standalone script, it's better to just let the process exit,
+    // which will close the connection automatically.
+    // If you must close, use a dedicated connection for the script.
+    // For now, we will let the process exit naturally.
+    process.exit(0);
   }
 };
 
