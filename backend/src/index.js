@@ -19,7 +19,7 @@ const pushRoutes = require('./routes/pushRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 
 // --- Error Handler Middleware ---
-const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const { notFound, errorHandler } = require('./errorMiddleware');
 
 
 const app = express();
