@@ -56,7 +56,7 @@ const createTables = async () => {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
       is_admin BOOLEAN DEFAULT FALSE,
       avatar_url VARCHAR(255),
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
