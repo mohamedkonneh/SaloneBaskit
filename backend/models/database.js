@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
 
-const isProduction = process.env.NODE_ENV === 'production';
+// In a production environment like Render, DATABASE_URL will be set.
+// This is a more reliable check than NODE_ENV for this specific script's purpose.
+const isProduction = !!process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
