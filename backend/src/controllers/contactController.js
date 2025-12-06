@@ -29,8 +29,9 @@ const submitContactForm = async (req, res) => {
 // @access  Private/Admin
 const getContactMessages = async (req, res) => {
   try {
-    const messages = await db.query('SELECT * FROM contact_submissions ORDER BY created_at DESC');
-    res.json(messages.rows);
+    const result = await db.query('SELECT * FROM contact_submissions ORDER BY created_at DESC');
+    // Wrap the array in an object for a consistent API response structure.
+    res.json({ messages: result.rows });
   } catch (error) {
     console.error('Error fetching contact messages:', error);
     res.status(500).send('Server Error');
