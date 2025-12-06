@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 const { initSocket } = require('../socket'); // Import the socket initializer
 
@@ -33,6 +34,20 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/push', pushRoutes);
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  // This assumes your frontend is built into a 'dist' folder in the frontend directory
+  const frontendBuildPath = path.resolve(__dirname, '../../../frontend/dist');
+  app.use(express.static(frontendBuildPath));
+
+  // For any route that is not an API route, send back the index.html file
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(frontendBuildPath, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => res.send('API is running in development mode...'));
+}
 
 // Create HTTP server and initialize Socket.IO
 const server = http.createServer(app);
