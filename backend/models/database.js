@@ -123,6 +123,16 @@ const createTables = async () => {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS admin_replies (
+      id SERIAL PRIMARY KEY,
+      recipient_email VARCHAR(255) NOT NULL,
+      admin_id INTEGER REFERENCES users(id),
+      subject VARCHAR(255),
+      body TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+
     CREATE TABLE IF NOT EXISTS conversations (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
