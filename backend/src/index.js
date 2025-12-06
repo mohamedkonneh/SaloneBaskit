@@ -67,6 +67,22 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/chat', chatRoutes);
 
+// --- Serve Frontend in Production ---
+// This must be after all API routes and before the error handlers.
+if (process.env.NODE_ENV === 'production') {
+  // Define the path to the frontend build directory
+  const frontendBuildPath = path.resolve(__dirname, '../../frontend/dist');
+
+  // Serve the static files from the React app
+  app.use(express.static(frontendBuildPath));
+
+  // The "catchall" handler: for any request that doesn't match one above,
+  // send back React's index.html file.
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(frontendBuildPath, 'index.html'));
+  });
+}
+
 // --- Error Handling Middleware (should be last) ---
 app.use(notFound);
 app.use(errorHandler);
