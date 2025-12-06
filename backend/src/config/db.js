@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '..', '.env') });
 
 // In a production environment like Render, DATABASE_URL will be set.
 // This is a more reliable check than NODE_ENV for determining if SSL is needed.
