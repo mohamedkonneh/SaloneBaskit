@@ -2,6 +2,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // The DATABASE_URL will be provided by Render in production.
+// This is a more reliable check than NODE_ENV alone for determining if SSL is needed.
 const isProduction = process.env.NODE_ENV === 'production' || !!process.env.DATABASE_URL;
 
 const pool = new Pool({
