@@ -37,8 +37,8 @@ app.use('/api/push', pushRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
-  // This assumes your frontend is built into a 'dist' folder in the frontend directory
-  const frontendBuildPath = path.resolve(__dirname, '../../../frontend/dist');
+  // Correctly resolve the path to the frontend build directory
+  const frontendBuildPath = path.resolve(__dirname, '..', '..', '..', 'frontend', 'dist');
   app.use(express.static(frontendBuildPath));
 
   // For any route that is not an API route, send back the index.html file
