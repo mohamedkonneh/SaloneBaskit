@@ -6,7 +6,8 @@ const db = require('../config/db');
 const getSuppliers = async (req, res) => {
   try {
     const suppliers = await db.query('SELECT * FROM suppliers ORDER BY name ASC');
-    res.json(suppliers.rows);
+    // Standardize API response by wrapping the array in an object.
+    res.json({ suppliers: suppliers.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');

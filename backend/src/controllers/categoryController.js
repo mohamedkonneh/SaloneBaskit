@@ -6,7 +6,8 @@ const db = require('../config/db');
 const getCategories = async (req, res) => {
   try {
     const categories = await db.query('SELECT * FROM categories ORDER BY name ASC');
-    res.json(categories.rows);
+    // Standardize API response by wrapping the array in an object.
+    res.json({ categories: categories.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -76,7 +77,8 @@ const deleteCategory = async (req, res) => {
 const getShowcasedCategories = async (req, res) => {
   try {
     const categories = await db.query('SELECT * FROM categories WHERE is_showcased = true ORDER BY name ASC');
-    res.json(categories.rows);
+    // Standardize API response by wrapping the array in an object.
+    res.json({ categories: categories.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
