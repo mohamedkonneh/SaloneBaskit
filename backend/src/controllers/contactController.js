@@ -13,7 +13,7 @@ const submitContactForm = async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO contact_messages (name, email, phone, message)
+      INSERT INTO contact_submissions (name, email, phone, message)
       VALUES ($1, $2, $3, $4)
     `;
     await db.query(query, [name, email, phone, message]);
@@ -29,7 +29,7 @@ const submitContactForm = async (req, res) => {
 // @access  Private/Admin
 const getContactMessages = async (req, res) => {
   try {
-    const messages = await db.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const messages = await db.query('SELECT * FROM contact_submissions ORDER BY created_at DESC');
     res.json(messages.rows);
   } catch (error) {
     console.error('Error fetching contact messages:', error);
