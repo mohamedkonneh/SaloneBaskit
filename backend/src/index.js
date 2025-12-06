@@ -7,7 +7,7 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const db = require('./config/db');
 
 // Load environment variables from .env file in the backend root
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '..', '..', '.env') }); // Adjusted path for .env in backend root
 
 // --- Route Imports ---
 const userRoutes = require('./routes/userRoutes');
