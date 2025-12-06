@@ -60,7 +60,7 @@ const addOrderItems = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const orders = await db.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
-    res.json(orders.rows);
+    res.json({ orders: orders.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -172,7 +172,7 @@ const getOrders = async (req, res) => {
       ORDER BY o.created_at DESC
     `;
     const orders = await db.query(query);
-    res.json(orders.rows);
+    res.json({ orders: orders.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');

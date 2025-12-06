@@ -134,7 +134,7 @@ const updateUserProfile = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await db.query('SELECT id, name, email, is_admin FROM users ORDER BY id ASC');
-    res.json(users.rows);
+    res.json({ users: users.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -163,7 +163,7 @@ const getUserMailbox = async (req, res) => {
       'SELECT * FROM admin_replies WHERE recipient_email = $1 ORDER BY created_at DESC',
       [req.user.email]
     );
-    res.json(replies.rows);
+    res.json({ replies: replies.rows });
   } catch (error) {
     console.error('Error fetching user mailbox:', error);
     res.status(500).send('Server Error');

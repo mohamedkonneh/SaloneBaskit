@@ -63,7 +63,7 @@ const getUserConversations = async (req, res) => {
       `;
       conversations = await db.query(query, [req.user.id]);
     }
-    res.json(conversations.rows);
+    res.json({ conversations: conversations.rows });
   } catch (error) {
     console.error('Error fetching user conversations:', error);
     res.status(500).send('Server Error');
@@ -79,7 +79,7 @@ const getMessages = async (req, res) => {
       'SELECT * FROM chat_messages WHERE conversation_id = $1 ORDER BY created_at ASC',
       [req.params.id]
     );
-    res.json(messages.rows);
+    res.json({ messages: messages.rows });
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).send('Server Error');
