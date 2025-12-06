@@ -26,9 +26,11 @@ const subscribe = async (req, res) => {
 
     try {
         // Store the subscription object in your database, associated with the user
+        // Use ON CONFLICT to handle cases where the same endpoint is subscribed again
         await db.query(
-            'INSERT INTO push_subscriptions (user_id, subscriptionS Fud
-
+            'INSERT INTO push_subscriptions (user_id, subscription, endpoint) VALUES ($1, $2, $3) ON CONFLICT (endpoint) DO UPDATE SET subscription = $2, user_id = $1',
+            [userId, subscription, subscription.endpoint]
+        );
         res.status(201).json({ message: 'Subscription saved.' });
     } catch (error) {
         console.error('Error saving subscription:', error);
@@ -44,10 +46,13 @@ const sendNotification = async (req, res) => {
 
     try {
         const { rows: subscriptions } = await db.query('SELECT subscription FROM push_subscriptions');
- p
+
+        const payload = JSON.stringify({ title, body });
 
         const promises = subscriptions.map(sub => webpush.sendNotification(sub.subscription, payload));
         await Promise.all(promises);
+
+        res.status(200).json({ message: 'Notifications sent successfully.' });
 
     } catch (error) {
         console.error('Error sending notification:', error);
