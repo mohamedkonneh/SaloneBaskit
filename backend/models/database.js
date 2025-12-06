@@ -33,12 +33,10 @@ const createTables = async () => {
       name VARCHAR(255) NOT NULL,
       description TEXT,
       price DECIMAL(10, 2) NOT NULL,
-      category VARCHAR(255),
+      category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
       count_in_stock INTEGER NOT NULL DEFAULT 0,
       image_urls TEXT[],
       brand VARCHAR(255),
-      rating DECIMAL(3, 2) DEFAULT 0,
-      num_reviews INTEGER DEFAULT 0,
       supplier_id INTEGER REFERENCES suppliers(id) ON DELETE SET NULL,
       is_deal_of_the_day BOOLEAN DEFAULT FALSE,
       is_flash_sale BOOLEAN DEFAULT FALSE,
@@ -101,25 +99,7 @@ const createTables = async () => {
       phone VARCHAR(50),
       message TEXT NOT NULL,
       user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-      replied BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS push_subscriptions (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      subscription JSONB NOT NULL,
-      endpoint VARCHAR(512) NOT NULL UNIQUE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS mailbox (
-      id SERIAL PRIMARY KEY,
-      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      subject VARCHAR(255),
-      body TEXT,
-      is_read BOOLEAN DEFAULT FALSE,
-      original_message_id INTEGER REFERENCES contact_submissions(id) ON DELETE SET NULL,
+      status VARCHAR(50) DEFAULT 'New',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -132,6 +112,13 @@ const createTables = async () => {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      subscription JSONB NOT NULL,
+      endpoint VARCHAR(512) NOT NULL UNIQUE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
 
     CREATE TABLE IF NOT EXISTS conversations (
       id SERIAL PRIMARY KEY,

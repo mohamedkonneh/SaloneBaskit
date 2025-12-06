@@ -95,8 +95,8 @@ const createTables = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS order_items (
         id SERIAL PRIMARY KEY,
-        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE, -- Ensures order items are deleted if the order is.
+        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL, -- Allows product to be deleted without breaking old orders.
         name VARCHAR(255) NOT NULL,
         quantity INTEGER NOT NULL,
         price DECIMAL(10, 2) NOT NULL,
@@ -111,6 +111,7 @@ const createTables = async () => {
         email VARCHAR(255) NOT NULL,
         phone VARCHAR(50),
         message TEXT NOT NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Link submission to a user if they are logged in.
         status VARCHAR(50) DEFAULT 'New',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
@@ -119,8 +120,8 @@ const createTables = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS admin_replies (
         id SERIAL PRIMARY KEY,
-        recipient_email VARCHAR(255) NOT NULL,
-        admin_id INTEGER REFERENCES users(id),
+        recipient_email VARCHAR(255) NOT NULL, -- The user's email who receives the reply.
+        admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Link to the admin who replied.
         subject VARCHAR(255),
         body TEXT NOT NULL,
         contact_submission_id INTEGER REFERENCES contact_submissions(id) ON DELETE SET NULL,
@@ -141,7 +142,7 @@ const createTables = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id SERIAL PRIMARY KEY,
-        conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+        conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE, -- Ensures messages are deleted if the conversation is.
         sender_id INTEGER NOT NULL REFERENCES users(id),
         message TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
