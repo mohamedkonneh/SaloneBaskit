@@ -5,7 +5,7 @@ const db = require('../config/db');
 // @access  Public
 const getContentByKey = async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM site_content WHERE page_key = $1', [req.params.key]);
+    const result = await db.query('SELECT * FROM content WHERE page_key = $1', [req.params.key]);
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
     } else {
@@ -24,7 +24,7 @@ const updateContentByKey = async (req, res) => {
   const { content } = req.body;
   try {
     const result = await db.query(
-      'UPDATE site_content SET content = $1, updated_at = NOW() WHERE page_key = $2 RETURNING *',
+      'UPDATE content SET content = $1, updated_at = NOW() WHERE page_key = $2 RETURNING *',
       [content, req.params.key]
     );
     if (result.rows.length > 0) {

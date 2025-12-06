@@ -76,7 +76,7 @@ const getUserConversations = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const messages = await db.query(
-      'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC',
+      'SELECT * FROM chat_messages WHERE conversation_id = $1 ORDER BY created_at ASC',
       [req.params.id]
     );
     res.json(messages.rows);
@@ -96,8 +96,8 @@ const sendMessage = async (req, res) => {
 
   try {
     const newMessage = await db.query(
-      'INSERT INTO messages (conversation_id, sender_id, body) VALUES ($1, $2, $3) RETURNING *',
-      [conversationId, senderId, body] // This was correct, but ensuring it's clear.
+      'INSERT INTO chat_messages (conversation_id, sender_id, message) VALUES ($1, $2, $3) RETURNING *',
+      [conversationId, senderId, body]
     );
 
     // Emit the message via Socket.IO to other clients in the room
@@ -116,7 +116,7 @@ const sendMessage = async (req, res) => {
 const deleteMessage = async (req, res) => {
   // In a real app, you'd also check if req.user.id is the sender_id
   try {
-    await db.query('DELETE FROM messages WHERE id = $1', [req.params.id]);
+    await db.query('DELETE FROM chat_messages WHERE id = $1', [req.params.id]);
     res.json({ message: 'Message deleted' });
   } catch (error) {
     res.status(500).send('Server Error');
@@ -128,7 +128,7 @@ const deleteMessage = async (req, res) => {
 // @access  Private
 const clearConversationMessages = async (req, res) => {
   try {
-    await db.query('DELETE FROM messages WHERE conversation_id = $1', [req.params.id]);
+    await db.query('DELETE FROM chat_messages WHERE conversation_id = $1', [req.params.id]);
     res.json({ message: 'All messages cleared from conversation' });
   } catch (error) {
     res.status(500).send('Server Error');
@@ -140,7 +140,7 @@ const clearConversationMessages = async (req, res) => {
 // @access  Private
 const deleteConversation = async (req, res) => {
   try {
-    await db.query('DELETE FROM messages WHERE conversation_id = $1', [req.params.id]);
+    await db.query('DELETE FROM chat_messages WHERE conversation_id = $1', [req.params.id]);
     await db.query('DELETE FROM conversations WHERE id = $1', [req.params.id]);
     res.json({ message: 'Conversation deleted' });
   } catch (error) {

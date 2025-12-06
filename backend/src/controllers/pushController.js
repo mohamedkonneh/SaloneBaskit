@@ -27,9 +27,7 @@ const subscribe = async (req, res) => {
     try {
         // Store the subscription object in your database, associated with the user
         await db.query(
-            'INSERT INTO push_subscriptions (user_id, subscription_data) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET subscription_data = $2',
-            [userId, JSON.stringify(subscription)]
-        );
+            'INSERT INTO push_subscriptions (user_id, subscriptionS Fud
 
         res.status(201).json({ message: 'Subscription saved.' });
     } catch (error) {
@@ -45,14 +43,12 @@ const sendNotification = async (req, res) => {
     const { title, body } = req.body;
 
     try {
-        const { rows: subscriptions } = await db.query('SELECT subscription_data FROM push_subscriptions');
+        const { rows: subscriptions } = await db.query('SELECT subscription FROM push_subscriptions');
+ p
 
-        const payload = JSON.stringify({ title, body });
-
-        const promises = subscriptions.map(sub => webpush.sendNotification(sub.subscription_data, payload));
+        const promises = subscriptions.map(sub => webpush.sendNotification(sub.subscription, payload));
         await Promise.all(promises);
 
-        res.status(200).json({ message: 'Notifications sent.' });
     } catch (error) {
         console.error('Error sending notification:', error);
         res.status(500).json({ message: 'Failed to send notifications.' });
