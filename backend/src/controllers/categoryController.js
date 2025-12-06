@@ -14,6 +14,24 @@ const getCategories = async (req, res) => {
   }
 };
 
+// @desc    Get category by ID
+// @route   GET /api/categories/:id
+// @access  Public
+const getCategoryById = async (req, res) => {
+  try {
+    const category = await db.query('SELECT * FROM categories WHERE id = $1', [req.params.id]);
+    if (category.rows.length > 0) {
+      res.json(category.rows[0]);
+    } else {
+      res.status(404).json({ message: 'Category not found' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+
 // @desc    Create a category
 // @route   POST /api/categories
 // @access  Private/Admin
@@ -86,4 +104,4 @@ const getShowcasedCategories = async (req, res) => {
 };
 
 
-module.exports = { getCategories, createCategory, updateCategory, deleteCategory, getShowcasedCategories };
+module.exports = { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory, getShowcasedCategories };
