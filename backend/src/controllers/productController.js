@@ -58,8 +58,10 @@ const getProductById = async (req, res) => {
 // @access  Public
 const getProductsBySupplier = async (req, res) => {
   try {
+    // To maintain a consistent API response structure, we wrap the array in an object.
     const products = await db.query('SELECT * FROM products WHERE supplier_id = $1 ORDER BY created_at DESC', [req.params.id]);
-    res.json(products.rows);
+    // The frontend will now always expect a `products` property.
+    res.json({ products: products.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -133,7 +135,8 @@ const getPromotionalProducts = async (req, res) => {
       ORDER BY created_at DESC
     `;
     const products = await db.query(query);
-    res.json(products.rows);
+    // Wrap the response in an object for consistency with the main getProducts endpoint.
+    res.json({ products: products.rows });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
