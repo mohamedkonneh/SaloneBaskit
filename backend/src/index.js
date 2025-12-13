@@ -49,7 +49,16 @@ app.use('/api', apiRoutes);
 
 // --- Error Handling Middleware ---
 app.use(notFound);
-app.use(errorHandler);
+// This is a simplified version of your errorHandler.
+// Ensure your actual errorHandler in `errorMiddleware.js` can handle this.
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
