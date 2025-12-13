@@ -1,21 +1,11 @@
-// frontend/src/api/axiosConfig.js
 import axios from 'axios';
 
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,  // <-- USE ENV VARIABLE
+// Use the environment variable provided by Vite for the backend URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const api = axios.create({
+  // All requests will be prefixed with the backend URL and '/api'
+  baseURL: `${API_BASE_URL}/api`,
 });
 
-// Add token to requests
-API.interceptors.request.use((req) => {
-  const userInfo = localStorage.getItem('userInfo')
-    ? JSON.parse(localStorage.getItem('userInfo'))
-    : null;
-
-  if (userInfo?.token) {
-    req.headers.Authorization = `Bearer ${userInfo.token}`;
-  }
-
-  return req;
-});
-
-export default API;
+export default api;
