@@ -1,0 +1,15 @@
+# Dependencies
+**/node_modules
+
+# Lockfiles in workspaces (allow only the root one)
+**/package-lock.json
+!/package-lock.json
+
+# Environment variables
+.env
+
+# Database backups
+*.sql
+
+# Logs
+*.log

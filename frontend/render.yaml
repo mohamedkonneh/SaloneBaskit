@@ -1,0 +1,10 @@
+services:
+  - name: salone-baskit-frontend
+    type: web
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: ./dist
+    routes:
+      - source: /*
+        destination: /index.html
+        type: rewrite
+
