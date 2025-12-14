@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../pages/imageUrl';
 
-const BACKEND_URL = 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/250x250/e9ecef/6c757d?text=...';
 
 // A palette of colors to cycle through for the border
@@ -72,7 +72,7 @@ const DynamicProductShowcase = ({ products, title }) => {
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               <img 
-                src={product.image_urls && product.image_urls.length > 0 ? `${BACKEND_URL}${product.image_urls[0]}` : PLACEHOLDER_IMAGE}
+                src={product.image_urls && product.image_urls.length > 0 ? getImageUrl(product.image_urls[0]) : PLACEHOLDER_IMAGE}
                 alt={product.name}
                 style={styles.image}
               />
