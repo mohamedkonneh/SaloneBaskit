@@ -7,8 +7,7 @@ import Slider from "react-slick";
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
-
-const BACKEND_URL = 'http://localhost:5000';
+import { getImageUrl } from '../pages/imageUrl'; // Import the helper
 
 // A palette of vibrant colors for the text
 const nameColors = ['#FFFFFF', '#81D4FA', '#FFCC80', '#A5D6A7', '#CE93D8'];
@@ -142,7 +141,7 @@ const PromotionalBanner = () => {
           const imageUrl = product.is_seasonal 
             ? product.image_url 
             : (product.image_urls && product.image_urls.length > 0 
-                ? `${BACKEND_URL}${product.image_urls[0]}` 
+                ? getImageUrl(product.image_urls[0]) 
                 : 'https://placehold.co/1200x400/e9ecef/6c757d?text=Promotion');
 
           return (
