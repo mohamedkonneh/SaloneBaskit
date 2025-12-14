@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Slider from "react-slick";
 
-import { getImageUrl } from '../pages/imageUrl';
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
+import { getImageUrl } from '../pages/imageUrl'; // Import the helper
 
 // A palette of vibrant colors for the text
 const nameColors = ['#FFFFFF', '#81D4FA', '#FFCC80', '#A5D6A7', '#CE93D8'];
@@ -79,7 +79,7 @@ const PromotionalBanner = () => {
   useEffect(() => {
     const fetchPromoProducts = async () => {
       try {
-        const { data } = await api.get('/api/products/promotions');
+        const { data } = await api.get('/products/promotions');
         // Add mock seasonal promotion for demonstration
         const seasonalPromo = {
           id: 'seasonal-1',
