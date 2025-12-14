@@ -3,13 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import ProductCard from '../components/ProductCard';
+import { useMediaQuery } from '../hooks/useMediaQuery'; // Import the custom hook
 
 const SupplierPage = () => {
   const { supplierId } = useParams();
   const [supplier, setSupplier] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { userInfo, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -41,15 +41,7 @@ const SupplierPage = () => {
     }
   }, [supplierId, authLoading]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  const isMobile = useMediaQuery('(max-width: 767px)'); // Use the custom hook
   if (authLoading || loading) return <p style={{textAlign: 'center', marginTop: '50px'}}>Loading supplier details...</p>;
   if (!supplier) return <p>Supplier not found.</p>;
 
