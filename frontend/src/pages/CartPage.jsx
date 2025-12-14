@@ -30,27 +30,52 @@ const CartPage = () => {
     <div style={styles.page(isMobile)}>
       <h1 style={styles.title}>Shopping Cart</h1>
       <div style={styles.layout(isMobile)}>
-        <div style={styles.itemsList}>
-          {cartItems.map(item => (
-            <div key={`${item.id}-${item.color}-${item.size}`} style={styles.item(isMobile)}>
-              <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
-              <div style={styles.itemDetails}>
-                <p style={styles.itemName}>{item.name}</p>
-                <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
-                {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
-                {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
-              </div>
-              <div style={styles.itemActions}>
-                <div style={styles.quantitySelector}>
-                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button>
+        {isMobile ? (
+          <div style={styles.itemsList}>
+            {cartItems.map(item => (
+              <div key={`${item.id}-${item.color}-${item.size}`} style={styles.item(isMobile)}>
+                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
+                <div style={styles.itemDetails}>
+                  <p style={styles.itemName}>{item.name}</p>
+                  <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
+                  {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
+                  {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
                 </div>
-                <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button>
+                <div style={styles.itemActions}>
+                  <div style={styles.quantitySelector}>
+                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button>
+                  </div>
+                  <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <table style={styles.table}>
+            <thead style={styles.tableHead}>
+              <tr>
+                <th style={{...styles.th, ...styles.thProduct}}>Product</th>
+                <th style={styles.th}>Price</th>
+                <th style={styles.th}>Quantity</th>
+                <th style={styles.th}>Subtotal</th>
+                <th style={styles.th}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cartItems.map(item => (
+                <tr key={`${item.id}-${item.color}-${item.size}`} style={styles.tableRow}>
+                  <td style={styles.td}><div style={styles.productCell}><img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} /><div><p style={styles.itemName}>{item.name}</p>{item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}{item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}</div></div></td>
+                  <td style={styles.td}>${Number(item.price).toFixed(2)}</td>
+                  <td style={styles.td}><div style={styles.quantitySelector}><button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button><span>{item.quantity}</span><button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button></div></td>
+                  <td style={styles.td}>${(item.quantity * item.price).toFixed(2)}</td>
+                  <td style={styles.td}><button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         <div style={styles.summary}>
           <h2 style={styles.summaryTitle}>Order Summary</h2>
@@ -95,6 +120,32 @@ const styles = {
     flexDirection: 'column',
     gap: '20px',
   },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+  },
+  tableHead: {
+    borderBottom: '2px solid #dee2e6',
+  },
+  th: {
+    padding: '15px',
+    textAlign: 'left',
+    fontWeight: '600',
+    color: '#495057',
+    fontSize: '0.9rem',
+    textTransform: 'uppercase',
+  },
+  thProduct: {
+    width: '50%',
+  },
+  tableRow: {
+    borderBottom: '1px solid #f1f3f5',
+  },
+  td: { padding: '15px', verticalAlign: 'middle' },
+  productCell: { display: 'flex', alignItems: 'center', gap: '15px' },
   item: (isMobile) => ({
     display: 'flex',
     alignItems: 'center',
