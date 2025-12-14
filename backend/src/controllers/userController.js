@@ -45,7 +45,7 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error during user registration.' });
   }
 };
 
@@ -77,7 +77,7 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error during login.' });
   }
 };
 
@@ -119,7 +119,7 @@ const updateUserProfile = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error on profile update.' });
   }
 };
 
@@ -132,7 +132,7 @@ const getUsers = async (req, res) => {
     res.json(users.rows);
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error fetching users.' });
   }
 };
 
@@ -151,7 +151,7 @@ const deleteUser = async (req, res) => {
     await db.query('DELETE FROM users WHERE id = $1', [req.params.id]); res.json({ message: 'User removed' });
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error deleting user.' });
   }
 };
 
@@ -167,7 +167,7 @@ const getUserMailbox = async (req, res) => {
     res.json(replies.rows);
   } catch (error) {
     console.error('Error fetching user mailbox:', error);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error fetching mailbox.' });
   }
 };
 

@@ -2,13 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../pages/imageUrl';
 
-const BACKEND_URL = 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/250x250/e9ecef/6c757d?text=...';
 
 const RecommendedProductCard = ({ product }) => {
   const { addToCart } = useCart();
-  const mainImage = product.image_urls && product.image_urls.length > 0 ? `${BACKEND_URL}${product.image_urls[0]}` : PLACEHOLDER_IMAGE;
+  const mainImage = product.image_urls && product.image_urls.length > 0 ? getImageUrl(product.image_urls[0]) : PLACEHOLDER_IMAGE;
 
   const handleAddToCart = (e) => {
     e.preventDefault(); // Prevent navigation when clicking the button

@@ -2,8 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FaTachometerAlt, FaBoxOpen, FaUsers, FaClipboardList, FaSignOutAlt, FaTruck, FaTags, FaUserCircle, FaFileAlt, FaCommentDots } from 'react-icons/fa';
-
-const BACKEND_URL = 'http://localhost:5000';
+import { getImageUrl } from '../pages/imageUrl';
 
 const AdminSidebar = ({ isOpen }) => {
   const { userInfo, logout } = useAuth();
@@ -20,7 +19,7 @@ const AdminSidebar = ({ isOpen }) => {
         <div style={styles.profileSection}>
           <div style={styles.avatar}>
             {userInfo?.avatarUrl ? (
-              <img src={`${BACKEND_URL}${userInfo.avatarUrl}`} alt="Avatar" style={styles.avatarImage} />
+              <img src={getImageUrl(userInfo.avatarUrl)} alt="Avatar" style={styles.avatarImage} />
             ) : (
               <FaUserCircle size={40} />
             )}

@@ -7,5 +7,5 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
-  base: './', // important for Render SPA
+  base: '/', // Use absolute paths for SPA routing
 });

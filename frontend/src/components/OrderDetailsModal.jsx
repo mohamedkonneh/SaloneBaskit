@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const BACKEND_URL = 'http://localhost:5000';
+import { getImageUrl } from '../pages/imageUrl';
 
 const OrderDetailsModal = ({ isOpen, onClose, order, isAdminView = false, onSaveChanges }) => {
   const [note, setNote] = useState('');
@@ -38,7 +37,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, isAdminView = false, onSave
         <div style={styles.itemsContainer}>
           {order.orderItems.map(item => (
             <div key={item.id} style={styles.item}>
-              <img src={`${BACKEND_URL}${item.image_url}`} alt={item.name} style={styles.itemImage} />
+              <img src={getImageUrl(item.image_url)} alt={item.name} style={styles.itemImage} />
               <div style={styles.itemDetails}>
                 <span>{item.name}</span>
                 <span>{item.quantity} x ${Number(item.price).toFixed(2)}</span>

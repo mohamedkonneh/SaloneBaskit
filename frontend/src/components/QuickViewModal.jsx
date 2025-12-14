@@ -2,15 +2,15 @@ import React from 'react';
 import { FaTimes, FaStar } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 
-const BACKEND_URL = 'http://localhost:5000';
+import { getImageUrl } from '../pages/imageUrl';
+
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x400/e9ecef/6c757d?text=No+Image';
 
 const QuickViewModal = ({ product, onClose }) => {
   const { addToCart } = useCart();
   if (!product) return null;
 
-  // Use the first image from the new image_urls array
-  const mainImage = product.image_urls && product.image_urls.length > 0 ? `${BACKEND_URL}${product.image_urls[0]}` : PLACEHOLDER_IMAGE;
+  const mainImage = product.image_urls && product.image_urls.length > 0 ? getImageUrl(product.image_urls[0]) : PLACEHOLDER_IMAGE;
   const hasDiscount = product.discounted_price && product.discounted_price < product.price;
 
   return (
