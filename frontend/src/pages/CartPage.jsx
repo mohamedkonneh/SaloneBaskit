@@ -34,20 +34,18 @@ const CartPage = () => {
           <div style={styles.itemsList}>
             {cartItems.map(item => (
               <div key={`${item.id}-${item.color}-${item.size}`} style={styles.item(isMobile)}>
-                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
-                <div style={styles.itemDetails}>
-                  <p style={styles.itemName}>{item.name}</p>
-                  <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
-                  {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
-                  {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
-                </div>
-                <div style={styles.itemActions}>
-                  <div style={styles.quantitySelector}>
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button>
+                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+                <div style={styles.itemContentMobile}>
+                  <div style={styles.itemDetails}>
+                    <p style={styles.itemName}>{item.name}</p>
+                    <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
+                    {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
+                    {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button>
+                  <div style={styles.itemActions}>
+                    <div style={styles.quantitySelector}><button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button><span>{item.quantity}</span><button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button></div>
+                    <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -66,7 +64,7 @@ const CartPage = () => {
             <tbody>
               {cartItems.map(item => (
                 <tr key={`${item.id}-${item.color}-${item.size}`} style={styles.tableRow}>
-                  <td style={styles.td}><div style={styles.productCell}><img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} /><div><p style={styles.itemName}>{item.name}</p>{item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}{item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}</div></div></td>
+                  <td style={styles.td}><div style={styles.productCell}><img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} /><div><p style={styles.itemName}>{item.name}</p>{item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}{item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}</div></div></td>
                   <td style={styles.td}>${Number(item.price).toFixed(2)}</td>
                   <td style={styles.td}><div style={styles.quantitySelector}><button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button><span>{item.quantity}</span><button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button></div></td>
                   <td style={styles.td}>${(item.quantity * item.price).toFixed(2)}</td>
@@ -152,16 +150,23 @@ const styles = {
     backgroundColor: 'white',
     padding: '15px',
     borderRadius: '8px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.05)', // Keep the shadow for depth
     gap: '15px',
-    flexDirection: isMobile ? 'column' : 'row',
-    textAlign: isMobile ? 'center' : 'left',
+    flexDirection: 'row', // Always a row now for mobile
+    textAlign: 'left',
   }),
-  itemImage: {
-    width: '80px',
-    height: '80px',
+  itemImage: (isMobile) => ({
+    width: isMobile ? '70px' : '80px', // Slightly smaller image on mobile
+    height: isMobile ? '70px' : '80px',
     objectFit: 'cover',
     borderRadius: '4px',
+    flexShrink: 0,
+  }),
+  itemContentMobile: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    flexGrow: 1,
   },
   itemDetails: {
     flexGrow: 1,
@@ -183,6 +188,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '20px',
+    marginTop: '10px', // Add space between details and actions on mobile
   },
   quantitySelector: {
     display: 'flex',
