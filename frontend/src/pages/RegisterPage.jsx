@@ -7,18 +7,25 @@ const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth(); // Use the login function for consistency
   const navigate = useNavigate();
   const submitHandler = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
     try {
       // Use the api instance. The baseURL is already configured.
       await api.post('/users/register', { name, email, password });
       await login(email, password); // Log the user in immediately after successful registration
       navigate('/'); // Redirect to home page after registration
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      // Use the detailed error message from the backend
+      const message = err.response?.data?.message || 'An unexpected error occurred during registration.';
+      setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,8 +35,8 @@ const RegisterPage = () => {
         <h1 style={styles.title}>SaloneBaskit</h1>
         <p style={styles.subtitle}>Create an account to start your shopping experience.</p>
 
-        {error && <p style={{color: 'red'}}>{error}</p>}
-        <form onSubmit={submitHandler}>
+        {error && <p style={{color: 'red', marginBottom: '1rem'}}>{error}</p>}
+        <form onSubmit={submitHandler} noValidate>
           <div style={styles.formGroup}>
             <input
               type="text"
@@ -38,16 +45,17 @@ const RegisterPage = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={styles.input}
+              disabled={loading}
               required
             />
           </div>
           <div style={styles.formGroup}>
-            <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} required />
+            <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
           <div style={styles.formGroup}>
-            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} required />
+            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
-          <button type="submit" style={styles.button}>Register</button>
+          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Registering...' : 'Register'}</button>
         </form>
         <p style={styles.redirect}>
           Already have an account? <Link to="/login" style={styles.link}>Log In</Link>
