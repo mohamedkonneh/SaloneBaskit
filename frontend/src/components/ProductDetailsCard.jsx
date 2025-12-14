@@ -5,9 +5,9 @@ import { toast } from 'react-toastify';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext'; // Import settings hook
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
+import { getImageUrl } from '../pages/imageUrl'; // Import the helper
 import FeaturedProductsCarousel from './FeaturedProductsCarousel'; // Import the carousel
 
-const BACKEND_URL = 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/500x500/e9ecef/6c757d?text=No+Image'; 
 
 // A mapping of color names to valid CSS color codes.
@@ -141,7 +141,7 @@ const ProductDetailsCard = ({ product, relatedProducts }) => {
           <div style={styles.imageGallery}>
             <div style={styles.mainImageContainer}>
                 <img 
-                  src={images.length > 0 ? `${BACKEND_URL}${images[selectedImage]}` : PLACEHOLDER_IMAGE} 
+                  src={images.length > 0 ? getImageUrl(images[selectedImage]) : PLACEHOLDER_IMAGE} 
                   alt={product.name} 
                   style={styles.mainImage}
                 />
@@ -153,7 +153,7 @@ const ProductDetailsCard = ({ product, relatedProducts }) => {
                   style={{...styles.thumbnail, ...(selectedImage === index ? styles.activeThumbnail : {})}}
                   onClick={() => setSelectedImage(index)}
                 >
-                  <img src={`${BACKEND_URL}${img}`} alt={`thumbnail ${index + 1}`} style={styles.thumbnailImage} />
+                  <img src={getImageUrl(img)} alt={`thumbnail ${index + 1}`} style={styles.thumbnailImage} />
                 </div>
               ))}
             </div>
