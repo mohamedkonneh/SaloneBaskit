@@ -9,10 +9,10 @@ const generateToken = (id) => {
 };
 
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { username, email, password } = req.body;
 
   // 1. Basic validation
-  if (!name || !email || !password) {
+  if (!username || !email || !password) {
     return res.status(400).json({ message: 'Please enter all fields' });
   }
 
