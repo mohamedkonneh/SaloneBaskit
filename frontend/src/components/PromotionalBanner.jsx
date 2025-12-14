@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Slider from "react-slick";
 
-import { useMediaQuery } from '../hooks/useMediaQuery';
 import { getImageUrl } from '../pages/imageUrl';
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
@@ -75,7 +74,8 @@ const animationStyles = [
 const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     const fetchPromoProducts = async () => {
       try {
@@ -96,6 +96,12 @@ const PromotionalBanner = () => {
       }
     };
     fetchPromoProducts();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const settings = {
