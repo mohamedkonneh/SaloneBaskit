@@ -25,11 +25,22 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+  try {
+    // The 'data' object itself is the user info payload from the backend.
     const { data } = await api.post('/users/login', { email, password });
+
     localStorage.setItem('userInfo', JSON.stringify(data));
     setUserInfo(data);
+
     return data;
-  };
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      'An unexpected error occurred. Please try again.';
+    throw new Error(message);
+  }
+};
+
 
   const logout = () => {
     localStorage.removeItem('userInfo');
@@ -43,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ userInfo, loading, login, logout, updateUserInfo }}
+      value={{ userInfo, loading, login, logout, updateUserInfo }} // Ensure updateUserInfo is exported
     >
       {children}
     </AuthContext.Provider>
