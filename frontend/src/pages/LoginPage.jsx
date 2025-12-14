@@ -1,45 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth'; // Correct import from the new hooks directory
-
-// Assuming you have some components for messages and loading spinners
-// import Message from '../components/Message';
-// import Loader from '../components/Loader';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // State for handling errors and loading
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const { userInfo, login } = useAuth();
-
-  // Redirect if user is already logged in
-  useEffect(() => {
-    if (userInfo) {
-      const redirectPath = new URLSearchParams(search).get('redirect') || '/';
-      navigate(redirectPath);
-    }
-  }, [userInfo, navigate, search]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
+    setError(null);
     setLoading(true);
-
     try {
-      await login(email, password);
-      // The useEffect above will handle the redirect on successful login
+      // The login function returns the user object on success
+      const userInfo = await login(email, password);
+
+      // Conditionally redirect based on the isAdmin flag
+      if (userInfo && userInfo.isAdmin) {
+        navigate('/admin'); // Redirect admins to the dashboard
+      } else {
+        navigate('/'); // Redirect regular users to the home page
+      }
     } catch (err) {
-      // This is where we catch the error from the API
-      const errorMessage = err.response?.data?.message || 'An unexpected error occurred. Please try again.';
-      setError(errorMessage);
+      setError(err.message);
     } finally {
-      setLoading(false); // Stop loading indicator in both success and error cases
+      setLoading(false);
     }
   };
 
@@ -47,31 +35,27 @@ const LoginPage = () => {
     <div style={styles.container}>
       <div style={styles.content}>
         <h1 style={styles.title}>SaloneBaskit</h1>
-        <p style={styles.subtitle}>Login to continue your unlimited shopping experience.</p>
+        <p style={styles.subtitle}>Welcome back! Please log in to your account.</p>
 
-        {error && <p style={{color: 'red'}}>{error}</p>}
-        {loading && <p>Signing in...</p>}
-
-        <form onSubmit={submitHandler}>
+        {error && <p style={{color: 'red', marginBottom: '1rem'}}>{error}</p>}
+        <form onSubmit={submitHandler} noValidate>
           <div style={styles.formGroup}>
-            <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} required disabled={loading} />
+            <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
           <div style={styles.formGroup}>
-            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} required disabled={loading} />
+            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
+          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Logging In...' : 'Log In'}</button>
         </form>
         <p style={styles.redirect}>
-          New Customer? <Link to="/register" style={styles.link}>Register</Link>
+          New to SaloneBaskit? <Link to="/register" style={styles.link}>Create an account</Link>
         </p>
       </div>
     </div>
   );
 };
 
-// Using same styles as RegisterPage for consistency
+// Using similar styles as RegisterPage for consistency
 const styles = {
   container: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f2f5', fontFamily: 'system-ui, sans-serif', padding: '20px' },
   content: { width: '100%', maxWidth: '400px', textAlign: 'center' },

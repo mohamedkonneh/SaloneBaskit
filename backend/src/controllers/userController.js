@@ -30,7 +30,7 @@ const registerUser = async (req, res) => {
 
     // Determine if the user should be an admin.
     // For production, it's best to use an environment variable: process.env.ADMIN_EMAIL
-    const isAdmin = email === 'example@gamail.com';
+    const isAdmin = email === 'example@gmail.com';
 
     // 4. Insert new user into the database, now including the is_admin status
     const newUserQuery = 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, email, is_admin';
