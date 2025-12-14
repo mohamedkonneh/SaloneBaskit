@@ -28,17 +28,21 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    // 4. Insert new user into the database
-    const newUserQuery = 'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, is_admin';
-    const newUser = await db.query(newUserQuery, [name, email, password_hash]);
+    // Determine if the user should be an admin.
+    // For production, it's best to use an environment variable: process.env.ADMIN_EMAIL
+    const isAdmin = email === 'example@gamail.com';
+
+    // 4. Insert new user into the database, now including the is_admin status
+    const newUserQuery = 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, email, is_admin';
+    const newUser = await db.query(newUserQuery, [name, email, password_hash, isAdmin]);
 
     const user = newUser.rows[0];
 
     // 5. Respond with user data and a token. The 'if/else' is not needed here.
     // If the insert failed, the catch block would have handled it.
-    res.status(201).json({
+    return res.status(201).json({
       id: user.id,
-      name: user.name,
+      name: user.username, // Return username as 'name' to match frontend expectations
       email: user.email,
       isAdmin: user.is_admin,
       token: generateToken(user.id),
@@ -70,7 +74,7 @@ const loginUser = async (req, res) => {
     // 3. Respond with user data and a token
     res.json({
       id: user.id,
-      name: user.name,
+      name: user.username, // Return username as 'name'
       email: user.email,
       isAdmin: user.is_admin,
       token: generateToken(user.id),
@@ -88,7 +92,7 @@ const getUserProfile = async (req, res) => {
   // req.user is attached by the 'protect' middleware
   res.json({
     id: req.user.id,
-    name: req.user.name,
+    name: req.user.username, // Return username as 'name'
     email: req.user.email,
     isAdmin: req.user.is_admin,
   });
@@ -105,13 +109,13 @@ const updateUserProfile = async (req, res) => {
     // Use the new name from the body, or keep the existing name from req.user
     const updatedName = req.body.name || user.name;
 
-    const updateQuery = 'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, is_admin';
+    const updateQuery = 'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email, is_admin';
     const updatedUserResult = await db.query(updateQuery, [updatedName, user.id]);
     const updatedUser = updatedUserResult.rows[0];
 
     res.json({
       id: updatedUser.id,
-      name: updatedUser.name,
+      name: updatedUser.username, // Return username as 'name'
       email: updatedUser.email,
       isAdmin: updatedUser.is_admin,
       // Note: A new token is only needed if the payload (e.g., user ID, roles) changes.
@@ -128,7 +132,7 @@ const updateUserProfile = async (req, res) => {
 // @access  Private/Admin
 const getUsers = async (req, res) => {
   try {
-    const users = await db.query('SELECT id, name, email, is_admin FROM users ORDER BY id ASC');
+    const users = await db.query('SELECT id, username AS name, email, is_admin FROM users ORDER BY id ASC');
     res.json(users.rows);
   } catch (error) {
     console.error(error.message);

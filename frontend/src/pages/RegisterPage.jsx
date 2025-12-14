@@ -23,8 +23,14 @@ const RegisterPage = () => {
     try {
       // Use the api instance. The baseURL is already configured.
       const { data } = await api.post('/users/register', { name, email, password });
-      updateUserInfo(data); // Set the user state with the response from the register endpoint
-      navigate('/'); // Redirect to home page after registration
+      updateUserInfo(data); // Set the user state with the response
+
+      // Conditionally redirect based on the isAdmin flag from the backend response
+      if (data.isAdmin) {
+        navigate('/admin'); // Redirect to the admin dashboard
+      } else {
+        navigate('/'); // Redirect to the home page for regular users
+      }
     } catch (err) {
       // Use the detailed error message from the backend
       const message = err.response?.data?.message || 'An unexpected error occurred during registration.';
