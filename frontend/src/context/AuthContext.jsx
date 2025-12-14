@@ -25,10 +25,20 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/users/login', { email, password });
-    localStorage.setItem('userInfo', JSON.stringify(data));
-    setUserInfo(data);
-    return data;
+    try {
+      const { data } = await api.post('/users/login', { email, password });
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      setUserInfo(data);
+      return data;
+    } catch (error) {
+      // If the server sends back a specific error message, use it.
+      // Otherwise, use a generic message.
+      const message =
+        error.response?.data?.message ||
+        'An unexpected error occurred. Please try again.';
+      // Re-throw the error with a clear message for the UI to catch
+      throw new Error(message);
+    }
   };
 
   const logout = () => {
@@ -43,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ userInfo, loading, login, logout, updateUserInfo }}
+      value={{ userInfo, loading, login, logout, updateUserInfo }} // Ensure updateUserInfo is exported
     >
       {children}
     </AuthContext.Provider>
