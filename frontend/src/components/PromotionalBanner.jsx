@@ -7,6 +7,7 @@ import Slider from "react-slick";
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
+import { getImageUrl } from '../pages/imageUrl'; // Import the helper
 
 // A palette of vibrant colors for the text
 const nameColors = ['#FFFFFF', '#81D4FA', '#FFCC80', '#A5D6A7', '#CE93D8'];
