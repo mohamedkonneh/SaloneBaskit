@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { getImageUrl } from './imageUrl';
 import { FaTrash } from 'react-icons/fa';
+import api from '../api/axiosConfig';
+import ProductCard from '../components/ProductCard';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recPage, setRecPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef();
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.quantity * item.price, 0);
 
@@ -25,6 +33,46 @@ const CartPage = () => {
       </div>
     );
   }
+
+  // Endless scroll logic
+  const lastProductElementRef = useCallback(node => {
+    if (recLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setRecPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [recLoading, hasMore]);
+
+  // Fetch recommended products based on categories in cart
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      if (cartItems.length === 0) return;
+      setRecLoading(true);
+      try {
+        const categoriesInCart = [...new Set(cartItems.map(item => item.category))];
+        // In a real app, you'd pass categories and page to the backend.
+        // Here, we fetch all and simulate pagination client-side for demonstration.
+        const { data } = await api.get('/products');
+        const filtered = data.filter(p => 
+          categoriesInCart.includes(p.category) && !cartItems.find(cartItem => cartItem.id === p.id)
+        );
+        
+        // Simulate pagination
+        const newProducts = filtered.slice((recPage - 1) * 10, recPage * 10);
+        setRecommendedProducts(prev => [...prev, ...newProducts]);
+        setHasMore(newProducts.length > 0);
+
+      } catch (error) {
+        console.error("Failed to fetch recommendations", error);
+      }
+      setRecLoading(false);
+    };
+
+    fetchRecommended();
+  }, [cartItems, recPage]);
 
   return (
     <div style={styles.page(isMobile)}>
@@ -75,22 +123,43 @@ const CartPage = () => {
           </table>
         )}
 
-        <div style={styles.summary}>
-          <h2 style={styles.summaryTitle}>Order Summary</h2>
-          <div style={styles.summaryRow}>
-            <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+        {isMobile ? (
+          <div style={styles.stickyFooter}>
+            <div style={styles.stickySummary}>
+              <span>Total: <strong>${subtotal.toFixed(2)}</strong></span>
+              <button onClick={handleCheckout} style={styles.stickyCheckoutButton}>Checkout</button>
+            </div>
           </div>
-          <div style={styles.summaryRow}>
-            <span>Shipping</span>
-            <span>Calculated at checkout</span>
+        ) : (
+          <div style={styles.summary}>
+            <h2 style={styles.summaryTitle}>Order Summary</h2>
+            <div style={styles.summaryRow}>
+              <span>Subtotal</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div style={styles.summaryRow}>
+              <span>Shipping</span>
+              <span>Calculated at checkout</span>
+            </div>
+            <div style={{...styles.summaryRow, ...styles.totalRow}}>
+              <strong>Total</strong>
+              <strong>${subtotal.toFixed(2)}</strong>
+            </div>
+            <button onClick={handleCheckout} style={styles.checkoutButton}>Proceed to Checkout</button>
           </div>
-          <div style={{...styles.summaryRow, ...styles.totalRow}}>
-            <strong>Total</strong>
-            <strong>${subtotal.toFixed(2)}</strong>
-          </div>
-          <button onClick={handleCheckout} style={styles.checkoutButton}>Proceed to Checkout</button>
+        )}
+      </div>
+
+      {/* Recommended Products Section */}
+      <div style={styles.recommendationsContainer}>
+        <h2 style={styles.recommendationsTitle}>You Might Also Like</h2>
+        <div style={styles.productGrid(isMobile)}>
+          {recommendedProducts.map((product, index) => {
+            const isLastElement = recommendedProducts.length === index + 1;
+            return <div ref={isLastElement ? lastProductElementRef : null} key={product.id}><ProductCard product={product} /></div>;
+          })}
         </div>
+        {recLoading && <p style={{textAlign: 'center'}}>Loading more products...</p>}
       </div>
     </div>
   );
@@ -100,7 +169,7 @@ const styles = {
   page: (isMobile) => ({
     maxWidth: '1200px',
     margin: '40px auto',
-    padding: isMobile ? '0 15px' : '0 20px',
+    padding: isMobile ? '0 15px 100px 15px' : '0 20px', // Add bottom padding for sticky footer on mobile
     fontFamily: 'system-ui, sans-serif',
   }),
   title: {
@@ -259,6 +328,46 @@ const styles = {
     borderRadius: '8px',
     fontWeight: 'bold',
   },
+  stickyFooter: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+    padding: '15px',
+    zIndex: 1000,
+  },
+  stickySummary: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  stickyCheckoutButton: {
+    padding: '10px 25px',
+    border: 'none',
+    borderRadius: '8px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  recommendationsContainer: {
+    marginTop: '60px',
+    paddingTop: '40px',
+    borderTop: '1px solid #eee',
+  },
+  recommendationsTitle: {
+    fontSize: '1.8rem',
+    fontWeight: 'bold',
+    marginBottom: '25px',
+  },
+  productGrid: (isMobile) => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(250px, 1fr))',
+    gap: isMobile ? '15px' : '25px',
+  }),
 };
 
 export default CartPage;
