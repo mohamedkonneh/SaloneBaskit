@@ -7,7 +7,7 @@ import Slider from "react-slick";
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
-import { useMediaQuery } from '../hooks/useMediaQuery'; // Import the custom hook
+
 // A palette of vibrant colors for the text
 const nameColors = ['#FFFFFF', '#81D4FA', '#FFCC80', '#A5D6A7', '#CE93D8'];
 
@@ -73,7 +73,8 @@ const animationStyles = [
 const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const isMobile = useMediaQuery('(max-width: 767px)'); // Use the custom hook
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
   useEffect(() => {
     const fetchPromoProducts = async () => {
       try {
