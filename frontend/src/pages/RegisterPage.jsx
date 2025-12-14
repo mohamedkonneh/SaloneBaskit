@@ -8,14 +8,14 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { updateUserInfo } = useAuth();
+  const { login } = useAuth(); // Use the login function for consistency
   const navigate = useNavigate();
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
       // Use the api instance. The baseURL is already configured.
-      const { data } = await api.post('/users/register', { name, email, password });
-      updateUserInfo(data);
+      await api.post('/users/register', { name, email, password });
+      await login(email, password); // Log the user in immediately after successful registration
       navigate('/'); // Redirect to home page after registration
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred');
