@@ -7,6 +7,7 @@ import { useSettings } from '../context/SettingsContext'; // Import settings hoo
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
 import { getImageUrl } from '../pages/imageUrl'; // Import the helper
 import FeaturedProductsCarousel from './FeaturedProductsCarousel'; // Import the carousel
+import { useMediaQuery } from '../hooks/useMediaQuery'; // Import the custom hook
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/500x500/e9ecef/6c757d?text=No+Image'; 
 
@@ -39,17 +40,9 @@ const ProductDetailsCard = ({ product, relatedProducts }) => {
   const [reviewText, setReviewText] = useState(''); // State for user's review comment
   const [hoverRating, setHoverRating] = useState(0); // State for star hover effect
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useMediaQuery('(max-width: 767px)'); // Use the custom hook
   const [isCartHovered, setIsCartHovered] = useState(false);
   const [isBuyNowHovered, setIsBuyNowHovered] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   if (!product) {
     return <div>Loading product details...</div>;
@@ -212,8 +205,6 @@ const ProductDetailsCard = ({ product, relatedProducts }) => {
             <div style={{borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '20px'}}>
               <p style={styles.description}>{product.description || 'No description available for this product.'}</p>
             </div>
-
-            <p style={styles.description}>{product.description || 'No description available for this product.'}</p>
 
             {product.colors && product.colors.length > 0 && (
               <div style={styles.optionsSection}>
