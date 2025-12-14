@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Determine the base URL based on the environment
-const baseURL = process.env.NODE_ENV === 'production'
-  ? 'https://salonebaskit-993d.onrender.com/api' // Your Render backend URL
-  : 'http://localhost:5000/api'; // Your local backend URL
+// Always use the live Render backend URL for all environments.
+const baseURL = 'https://salonebaskit-993d.onrender.com/api';
 
 // Create a new Axios instance with a custom configuration
 const api = axios.create({
