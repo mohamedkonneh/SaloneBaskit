@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../pages/imageUrl'; // Import the helper
+import { useMediaQuery } from '../hooks/useMediaQuery'; // Import the custom hook
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/200x200/e9ecef/6c757d?text=...';
 
 const LandscapeProductCard = ({ product, backgroundColor }) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useMediaQuery('(max-width: 767px)'); // Use the custom hook
   const [isHovered, setIsHovered] = useState(false);
   const mainImage = product.image_urls && product.image_urls.length > 0 ? getImageUrl(product.image_urls[0]) : PLACEHOLDER_IMAGE;
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   return (
     <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
