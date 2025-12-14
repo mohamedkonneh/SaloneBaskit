@@ -7,18 +7,23 @@ const RegisterPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth(); // Use the login function for consistency
+  const { updateUserInfo } = useAuth(); // Use updateUserInfo to set auth state from registration response
   const navigate = useNavigate();
   const submitHandler = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
       // Use the api instance. The baseURL is already configured.
-      await api.post('/users/register', { username, email, password });
-      await login(email, password); // Log the user in immediately after successful registration
+      const { data } = await api.post('/users/register', { username, email, password });
+      updateUserInfo(data); // Set the user state with the response from the register endpoint
       navigate('/'); // Redirect to home page after registration
     } catch (err) {
       // Use the detailed error message from the backend
@@ -54,6 +59,9 @@ const RegisterPage = () => {
           </div>
           <div style={styles.formGroup}>
             <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} disabled={loading} required />
+          </div>
+          <div style={styles.formGroup}>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
           <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Registering...' : 'Register'}</button>
         </form>
