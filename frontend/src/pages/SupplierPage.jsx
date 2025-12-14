@@ -20,11 +20,13 @@ const SupplierPage = () => {
         // Use the 'api' instance for all calls. The interceptor will handle the token.
         const [supRes, prodRes] = await Promise.all([
           api.get(`/suppliers/${supplierId}`),
-          api.get(`/products/supplier/${supplierId}`)
+          api.get(`/products`) // Fetch all products and filter them client-side
         ]);
         
         setSupplier(supRes.data);
-        setProducts(prodRes.data);
+        // Filter products by the current supplier's ID
+        const supplierProducts = prodRes.data.filter(p => p.supplier_id === parseInt(supplierId));
+        setProducts(supplierProducts);
 
       } catch (error) {
         console.error("Failed to fetch supplier data", error);
