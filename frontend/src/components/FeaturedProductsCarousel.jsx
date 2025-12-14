@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Slider from 'react-slick';
+import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../pages/imageUrl';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 
-const BACKEND_URL = 'http://localhost:5000';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/250x250/e9ecef/6c757d?text=...';
 
 // --- Local CustomFeaturedCard Component ---
@@ -17,16 +19,16 @@ const AddToCartIcon = () => (
 
 const CustomFeaturedCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { addToCart } = useCart();
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log(`Added ${product.name} to cart.`);
-    // TODO: Add to cart logic
+    addToCart(product, 1);
   };
 
   const imageUrl = product.image_urls && product.image_urls.length > 0 
-    ? `${BACKEND_URL}${product.image_urls[0]}` 
+    ? getImageUrl(product.image_urls[0]) 
     : PLACEHOLDER_IMAGE;
 
   return (
@@ -51,13 +53,7 @@ const CustomFeaturedCard = ({ product }) => {
 // --- End of Local Component ---
 
 const FeaturedProductsCarousel = ({ products, title, onProductClick }) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const settings = {
     dots: true,
