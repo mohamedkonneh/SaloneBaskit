@@ -12,10 +12,6 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const submitHandler = async (e) => {
     e.preventDefault();
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
     try {
       // Use the api instance. The baseURL is already configured.
       const { data } = await api.post('/users/register', { name, email, password });
