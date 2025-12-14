@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import api from '../api/axiosConfig';
 
 const RegisterPage = () => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +22,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       // Use the api instance. The baseURL is already configured.
-      const { data } = await api.post('/users/register', { username, email, password });
+      const { data } = await api.post('/users/register', { name, email, password });
       updateUserInfo(data); // Set the user state with the response from the register endpoint
       navigate('/'); // Redirect to home page after registration
     } catch (err) {
@@ -47,8 +47,8 @@ const RegisterPage = () => {
               type="text"
               id="name"
               placeholder="Full Name"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               style={styles.input}
               disabled={loading}
               required
