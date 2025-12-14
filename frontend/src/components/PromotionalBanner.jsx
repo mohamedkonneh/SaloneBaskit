@@ -76,11 +76,10 @@ const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useMediaQuery('(max-width: 767px)');
-
   useEffect(() => {
     const fetchPromoProducts = async () => {
       try {
-        const { data } = await api.get('/products/promotions');
+        const { data } = await api.get('/api/products/promotions');
         // Add mock seasonal promotion for demonstration
         const seasonalPromo = {
           id: 'seasonal-1',
