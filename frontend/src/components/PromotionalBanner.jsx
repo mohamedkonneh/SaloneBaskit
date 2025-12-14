@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Slider from "react-slick";
 
+import { useMediaQuery } from '../hooks/useMediaQuery';
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
