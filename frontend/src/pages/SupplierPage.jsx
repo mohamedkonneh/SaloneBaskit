@@ -20,8 +20,8 @@ const SupplierPage = () => {
         // Use the 'api' instance for all calls. The interceptor will handle the token.
         // All calls must now include the /api prefix.
         const [supRes, prodRes] = await Promise.all([
-          api.get(`/api/suppliers/${supplierId}`),
-          api.get(`/api/products`) // Fetch all products
+          api.get(`/suppliers/${supplierId}`),
+          api.get(`/products`) // Fetch all products
         ]);
         setSupplier(supRes.data);
         // Filter products by the current supplier's ID
