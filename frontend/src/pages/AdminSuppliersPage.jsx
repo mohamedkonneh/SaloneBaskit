@@ -73,7 +73,7 @@ const AdminSuppliersPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(''); // Clear previous errors
-    const supplierData = { name: formState.name, contact_person: formState.contact, email: formState.email, phone: formState.phone, address: formState.address };
+    const supplierData = { name: formState.name, contact_person: formState.contact_person, email: formState.email, phone: formState.phone, address: formState.address };
 
     try {
       if (editingSupplier) {
