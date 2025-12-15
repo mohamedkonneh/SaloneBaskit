@@ -11,6 +11,7 @@ const AdminSuppliersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const { userInfo, loading: authLoading } = useAuth();
 
@@ -25,7 +26,8 @@ const AdminSuppliersPage = () => {
       const { data } = await api.get('/suppliers');
       setSuppliers(data);
     } catch (err) {
-      setError('Could not fetch suppliers.');
+      // Provide a more detailed error message
+      setError(err.response?.data?.message || 'Could not fetch suppliers. The server may be experiencing issues.');
     } finally {
       setLoading(false);
     }
@@ -69,25 +71,29 @@ const AdminSuppliersPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(''); // Clear previous errors
     const supplierData = { name: formState.name, contact_person: formState.contact, email: formState.email, phone: formState.phone, address: formState.address };
 
     try {
       if (editingSupplier) {
-        await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
+        const { data: updatedSupplier } = await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
+        setSuppliers(suppliers.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
       } else {
         if (!userInfo?.id) {
           setError("Authentication error: User ID not found.");
+          setIsSubmitting(false);
           return;
         }
-        await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
+        const { data: newSupplier } = await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
+        setSuppliers([newSupplier, ...suppliers]); // Add to the top of the list
       }
-      fetchSuppliers();
-      setError(''); // Clear error on success
+      cancelEdit(); // Clear the form
     } catch (error) {
       // Display the actual error message from the backend
       setError(error.response?.data?.message || error.response?.data || 'Failed to save supplier.');
     } finally {
-      cancelEdit();
+      setIsSubmitting(false);
     }
   };
 
@@ -130,7 +136,7 @@ const AdminSuppliersPage = () => {
               {editingSupplier && (
                 <button type="button" onClick={cancelEdit} style={{...styles.button, ...styles.cancelButton}}>Cancel</button>
               )}
-              <button type="submit" style={styles.button}>{editingSupplier ? 'Update Supplier' : 'Add Supplier'}</button>
+              <button type="submit" style={styles.button} disabled={isSubmitting}>{isSubmitting ? 'Saving...' : (editingSupplier ? 'Update Supplier' : 'Add Supplier')}</button>
             </div>
           </form>
         </div>
