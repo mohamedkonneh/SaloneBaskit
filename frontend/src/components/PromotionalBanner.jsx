@@ -75,7 +75,9 @@ const animationStyles = [
 const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const sMobile  ('(maoducts = async () => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  useEffect(() => {
+    const fetchPromoProducts = async () => {
       try {
         const { data } = await api.get('/products/promotions');
         // Add mock seasonal promotion for demonstration
@@ -95,7 +97,13 @@ const PromotionalBanner = () => {
     };
     fetchPromoProducts();
   }, []);
- ii
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500, // The speed of the slide transition itself (0.5 seconds)
+    slidesToShow: 1,
+    slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000, // Pause for 5 seconds before the next slide
     arrows: !isMobile, // Only show arrows on desktop
