@@ -13,29 +13,18 @@ const LandscapeProductsCarousel = ({ products, title }) => {
     infinite: products.length > 1, // Loop if there are more products than slides shown
     speed: 500, // The speed of the slide transition (0.5 seconds)
     autoplay: true, // Enable autoplay
-    autoplaySpeed: 2000, // Set autoplay speed to 3 seconds
+    autoplaySpeed: 3000, // Set autoplay speed to 3 seconds
     cssEase: 'ease-in-out', // A standard, smooth easing for the transition
     pauseOnHover: true, // Pause the slideshow when the user hovers over it
-    slidesToShow: 1,
-    slidesToScroll: 1, // Scroll one at a time for a continuous flow
+    slidesToShow: 2, // Default for desktop
+    slidesToScroll: 2, // Scroll two at a time on desktop
     arrows: true, // Enable navigation arrows for manual control
     responsive: [
       {
-        breakpoint: 1200,
-        settings: {
-          slidesToShow: 2.5,
-        }
-      },
-      {
         breakpoint: 768,
         settings: {
-          slidesToShow: 1,
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
+          slidesToShow: 1, // Show 1 on mobile
+          slidesToScroll: 1, // Scroll 1 on mobile
         }
       }
     ]
