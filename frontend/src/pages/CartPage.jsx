@@ -1,216 +1,209 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom';
-import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
-import ConfirmationModal from '../components/ConfirmationModal';
-import RecommendedProducts from '../components/RecommendedProducts'; // Import the new component
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import { getImageUrl } from './imageUrl';
+import { FaTrash, FaArrowLeft } from 'react-icons/fa';
 import api from '../api/axiosConfig';
-import { useSettings } from '../context/SettingsContext'; // Import settings hook
+import ProductCard from '../components/ProductCard';
+import { createPortal } from 'react-dom';
 
-const BACKEND_URL = 'http://localhost:5000';
+const MobileCheckoutBar = ({ total, onCheckout }) => {
+  return createPortal(
+    <div style={styles.stickyFooter}>
+      <div style={styles.stickySummary}>
+        <div>
+          <strong>Total</strong>
+          <div>${Number(total).toFixed(2)}</div>
+        </div>
+        <button onClick={onCheckout} style={styles.stickyCheckoutButton}>
+          Checkout
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
-  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
   const [recommendedProducts, setRecommendedProducts] = useState([]);
-  const { settings } = useSettings(); // Get global settings
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recPage, setRecPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef();
 
-  const subtotal = cartItems.reduce((acc, item) => {
-    const price = item.discounted_price || item.price;
-    return acc + item.quantity * price;
-  }, 0);
+  const subtotal = cartItems.reduce(
+    (acc, item) => acc + Number(item.price) * Number(item.quantity),
+    0
+  );
+
+  const handleCheckout = () => navigate('/checkout');
+
+  const lastProductElementRef = useCallback(
+    (node) => {
+      if (recLoading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) setRecPage((prev) => prev + 1);
+      });
+      if (node) observer.current.observe(node);
+    },
+    [recLoading, hasMore]
+  );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    // Helper function to format price based on selected currency
-    const formatPrice = (amount) => {
-      return new Intl.NumberFormat(settings.language, {
-        style: 'currency',
-        currency: settings.currency,
-      }).format(amount);
-    };
-    const fetchRecommendations = async () => {
-      if (cartItems.length === 0) {
-        setRecommendedProducts([]);
-        return;
-      }
+    const fetchRecommended = async () => {
+      if (cartItems.length === 0) return;
+      setRecLoading(true);
       try {
-        // Get unique supplier IDs from the cart
-        const supplierIds = [...new Set(cartItems.map(item => item.supplier_id))];
-        
-        // In a real app, you'd have a dedicated endpoint like:
-        // const { data } = await api.get(`/products/recommendations?supplierIds=${supplierIds.join(',')}`);
-        // setRecommendedProducts(data);
+        const categoriesInCart = [...new Set(cartItems.map((item) => item.category))];
+        const { data } = await api.get('/products');
+        const filtered = data.filter(
+          (p) =>
+            categoriesInCart.includes(p.category) &&
+            !cartItems.find((cartItem) => cartItem.id === p.id)
+        );
 
-        // For now, we'll fetch all products and filter them on the frontend.
-        const { data: allProducts } = await api.get('/products');
-        const cartProductIds = new Set(cartItems.map(item => item.id));
-        
-        const recommendations = allProducts.filter(p => 
-          supplierIds.includes(p.supplier_id) && !cartProductIds.has(p.id)
-        ).slice(0, 10); // Show a maximum of 10 recommendations
-
-        setRecommendedProducts(recommendations);
+        const newProducts = filtered.slice((recPage - 1) * 10, recPage * 10);
+        setRecommendedProducts((prev) => [...prev, ...newProducts]);
+        setHasMore(newProducts.length > 0);
       } catch (error) {
-        console.error("Failed to fetch recommended products:", error);
+        console.error('Failed to fetch recommendations', error);
       }
+      setRecLoading(false);
     };
 
-    fetchRecommendations();
-  }, [cartItems, settings.language, settings.currency]); // Add settings to dependency array
+    fetchRecommended();
+  }, [cartItems, recPage]);
 
-  // Helper function to format price based on selected currency
-  const formatPrice = (amount) => {
-    return new Intl.NumberFormat(settings.language, {
-      style: 'currency',
-      currency: settings.currency,
-    }).format(amount);
-  };
+  if (cartItems.length === 0) {
+    return (
+      <div style={styles.emptyCartContainer}>
+        <button style={styles.backBtn} onClick={() => navigate('/')}>
+          <FaArrowLeft /> Back to Home
+        </button>
+        <h2>Your Cart is Empty</h2>
+        <p>Add some products to your cart.</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={styles.page}>
-      <ConfirmationModal
-        isOpen={isClearModalOpen}
-        onClose={() => setIsClearModalOpen(false)}
-        onConfirm={() => { clearCart(); setIsClearModalOpen(false); }}
-        title="Clear Cart"
-        message="Are you sure you want to remove all items from your shopping cart?"
-      />
-      <div style={styles.header}>
-        <h1 style={styles.title}>Shopping Cart</h1>
-        {cartItems.length > 0 && (
-          <button onClick={() => setIsClearModalOpen(true)} style={styles.clearCartButton}>Clear All</button>
-        )}
-      </div>
-      {cartItems.length === 0 ? (
-        <div style={styles.emptyCart}>
-          <p>Your cart is empty.</p>
-          <Link to="/" style={styles.shopLink}>Continue Shopping</Link>
-        </div>
-      ) : (
-        <div style={{...styles.grid, gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr'}}>
-          <div style={styles.cartItems}>
-            {cartItems.map(item => (
-              <div key={item.cartItemId} style={styles.itemCard}>
-              <img 
-                src={item.image_urls && item.image_urls.length > 0 ? `${BACKEND_URL}${item.image_urls[0]}` : 'https://placehold.co/80x80/e9ecef/6c757d?text=N/A'} 
-                alt={item.name} style={styles.itemImage} 
-              />
-                <div style={styles.itemDetails}>
-                  <h3 style={styles.itemName}>{item.name}</h3>
-                  <p style={styles.itemOptions}>
-                    {item.color && `Color: ${item.color}`} {item.size && `Size: ${item.size}`}
-                  </p>
-                  <p style={styles.itemPrice}>{formatPrice(item.discounted_price || item.price)}</p>
-                </div>
-                <div style={styles.itemActions}>
-                  <div style={styles.quantitySelector}>
-                    <button style={styles.quantityBtn} onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}><FaMinus /></button>
-                    <span style={styles.quantityValue}>{item.quantity}</span>
-                    <button style={styles.quantityBtn} onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}><FaPlus /></button>
-                  </div>
-                  <button onClick={() => removeFromCart(item.cartItemId)} style={styles.removeButton} title="Remove item"><FaTrash /></button>
-                </div>
+    <div style={styles.page(isMobile)}>
+      {/* Back to Home */}
+      <button style={styles.backBtn} onClick={() => navigate('/')}>
+        <FaArrowLeft /> Back to Home
+      </button>
+
+      {/* Cart Items */}
+      <div style={styles.itemsList}>
+        {cartItems.map((item) => (
+          <div key={item.cartItemId} style={styles.item(isMobile)}>
+            <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+            <div style={styles.itemContentMobile}>
+              <div style={styles.itemDetails}>
+                <p style={styles.itemName}>{item.name}</p>
+                <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
+                {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
+                {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
               </div>
-            ))}
+              <div style={styles.itemActions}>
+                <div style={styles.quantitySelector}>
+                  <button
+                    onClick={() => updateQuantity(item.cartItemId, Math.max(item.quantity - 1, 1))}
+                    style={styles.quantityBtn}
+                  >
+                    -
+                  </button>
+                  <span>{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                    style={styles.quantityBtn}
+                  >
+                    +
+                  </button>
+                </div>
+                <button onClick={() => removeFromCart(item.cartItemId)} style={styles.removeBtn}>
+                  <FaTrash />
+                </button>
+              </div>
+            </div>
           </div>
-          <div style={{...styles.summary, position: isMobile ? 'relative' : 'sticky', top: isMobile ? '0' : '100px'}}>
-            <h2 style={styles.summaryTitle}>Order Summary</h2>
-            <div style={styles.summaryRow}>
-              <input type="text" placeholder="Enter Promo Code" style={styles.promoInput} />
-              <button style={styles.applyButton}>Apply</button>
-            </div>
-            <div style={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
-            </div>
-            <div style={styles.summaryRow}>
-              <span>Shipping</span>
-              <span>FREE</span>
-            </div>
-            <div style={{...styles.summaryRow, ...styles.totalRow}}>
-              <strong>Total</strong>
-              <strong>{formatPrice(subtotal)}</strong>
-            </div>
-            <Link to="/checkout" style={{textDecoration: 'none'}}>
-              <button style={styles.checkoutButton}>Proceed to Checkout</button>
-            </Link>
+        ))}
+      </div>
+
+      {/* Recommended Products */}
+      {recommendedProducts.length > 0 && (
+        <div style={styles.recommendationsContainer}>
+          <h2 style={styles.recommendationsTitle}>You Might Also Like</h2>
+          <div style={styles.productGrid(isMobile)}>
+            {recommendedProducts.map((product, index) => {
+              const isLast = index + 1 === recommendedProducts.length;
+              return (
+                <div key={product.id} ref={isLast ? lastProductElementRef : null}>
+                  <ProductCard product={product} />
+                </div>
+              );
+            })}
           </div>
+          {recLoading && <p style={{ textAlign: 'center' }}>Loading more products...</p>}
         </div>
       )}
-      {/* --- NEW RECOMMENDED PRODUCTS SECTION --- */}
-      <RecommendedProducts products={recommendedProducts} />
+
+      {/* Mobile Sticky Checkout */}
+      {isMobile && cartItems.length > 0 && <MobileCheckoutBar total={subtotal} onCheckout={handleCheckout} />}
     </div>
   );
 };
 
 const styles = {
-  page: { backgroundColor: '#f9fafb', minHeight: '100vh', padding: '40px 20px' },
-  title: { fontSize: '2.5rem', fontWeight: 'bold', margin: 0 },
-  emptyCart: { textAlign: 'center', padding: '80px 0', backgroundColor: 'white', borderRadius: '16px' },
-  shopLink: { textDecoration: 'none', backgroundColor: '#007bff', color: 'white', padding: '12px 25px', borderRadius: '8px', fontWeight: 'bold' },
-  grid: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px' },
-  cartItems: {}, // Removed styles that are now in page style
-  itemCard: { display: 'flex', alignItems: 'center', backgroundColor: 'white', padding: '20px', borderRadius: '12px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' },
-  itemImage: { width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginRight: '20px' },
-  itemDetails: { flexGrow: 1 },
-  itemName: { margin: '0 0 5px 0', fontWeight: '600' },
-  itemOptions: { margin: '0 0 10px 0', fontSize: '0.9rem', color: '#6c757d' },
-  itemPrice: { margin: 0, fontWeight: 'bold' },
-  itemActions: { display: 'flex', alignItems: 'center', gap: '20px' },
-  quantitySelector: { display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px' },
-  quantityBtn: { background: 'none', border: 'none', fontSize: '1rem', padding: '5px 10px', cursor: 'pointer' },
-  quantityValue: { padding: '5px 10px', fontWeight: 'bold' },
-  removeButton: {
-    background: '#ffeef0',
-    border: 'none',
-    color: '#dc3545',
-    cursor: 'pointer',
-    width: '36px',
-    height: '36px',
-    borderRadius: '8px',
+  page: (isMobile) => ({ maxWidth: '1200px', margin: '20px auto', padding: isMobile ? '0 15px 100px 15px' : '0 20px', fontFamily: 'system-ui, sans-serif' }),
+  backBtn: { background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', marginBottom: '20px', fontSize: 16, display: 'flex', alignItems: 'center', gap: 5 },
+  itemsList: { display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '80px' },
+  item: (isMobile) => ({
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summary: {
+    gap: '15px',
+    padding: '15px',
+    borderRadius: '8px',
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '16px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-    position: 'sticky',
-    top: '100px', // Adjust based on your header height
+    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    flexDirection: 'row',
+  }),
+  itemImage: (isMobile) => ({ width: isMobile ? 70 : 80, height: isMobile ? 70 : 80, objectFit: 'cover', borderRadius: 4 }),
+  itemContentMobile: { display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' },
+  itemDetails: { flexGrow: 1 },
+  itemName: { fontWeight: '600', margin: '0 0 5px 0' },
+  itemPrice: { margin: 0 },
+  itemVariant: { fontSize: 12, color: '#555', margin: '2px 0' },
+  itemActions: { display: 'flex', gap: 15, alignItems: 'center', marginTop: 10 },
+  quantitySelector: { display: 'flex', border: '1px solid #ccc', borderRadius: 5, alignItems: 'center' },
+  quantityBtn: { border: 'none', background: 'none', padding: '5px 10px', cursor: 'pointer', fontSize: 14 },
+  removeBtn: { border: 'none', background: 'none', color: '#dc3545', cursor: 'pointer', fontSize: 16 },
+  stickyFooter: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: '0 16px',
+    backgroundColor: 'white',
+    borderTop: '1px solid #ddd',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 999999,
+    height: 70,
+    paddingBottom: 'env(safe-area-inset-bottom)',
   },
-  summaryTitle: { marginTop: 0, borderBottom: '1px solid #eee', paddingBottom: '15px', fontSize: '1.4rem' },
-  summaryRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' },
-  promoInput: {
-    flexGrow: 1,
-    border: '1px solid #ccc',
-    borderRight: 'none',
-    padding: '10px',
-    borderTopLeftRadius: '8px',
-    borderBottomLeftRadius: '8px',
-    outline: 'none',
-  },
-  applyButton: {
-    padding: '10px 15px',
-    border: '1px solid #007bff',
-    backgroundColor: '#007bff',
-    color: 'white',
-    borderTopRightRadius: '8px',
-    borderBottomRightRadius: '8px',
-    cursor: 'pointer',
-  },
-  totalRow: { fontSize: '1.2rem', paddingTop: '15px', borderTop: '1px solid #eee' },
-  checkoutButton: { width: '100%', padding: '15px', border: 'none', borderRadius: '8px', backgroundColor: '#28a745', color: 'white', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' },
+  stickySummary: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' },
+  stickyCheckoutButton: { padding: '12px 28px', border: 'none', borderRadius: 8, backgroundColor: '#007bff', color: 'white', fontSize: 16, fontWeight: 'bold', cursor: 'pointer' },
+  recommendationsContainer: { marginTop: 60, paddingTop: 40, borderTop: '1px solid #eee' },
+  recommendationsTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 25 },
+  productGrid: (isMobile) => ({ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(250px, 1fr))', gap: isMobile ? 15 : 25 }),
 };
 
 export default CartPage;
