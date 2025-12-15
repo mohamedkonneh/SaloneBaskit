@@ -17,7 +17,7 @@ const LandscapeProductsCarousel = ({ products, title }) => {
     cssEase: 'ease-in-out', // A standard, smooth easing for the transition
     pauseOnHover: true, // Pause the slideshow when the user hovers over it
     slidesToShow: 2, // Default for desktop
-    slidesToScroll: 2, // Scroll two at a time on desktop
+    slidesToScroll: 1, // Scroll two at a time on desktop
     arrows: true, // Enable navigation arrows for manual control
     responsive: [
       {
