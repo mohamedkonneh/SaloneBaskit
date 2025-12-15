@@ -123,8 +123,9 @@ const CartPage = () => {
           </table>
         )}
 
+        {/* Desktop Summary */}
         {!isMobile && (
-          <div style={styles.summary}> {/* Desktop Summary */}
+          <div style={styles.summary}>
             <h2 style={styles.summaryTitle}>Order Summary</h2>
             <div style={styles.summaryRow}>
               <span>Subtotal</span>
