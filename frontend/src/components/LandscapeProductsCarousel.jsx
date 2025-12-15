@@ -13,7 +13,7 @@ const LandscapeProductsCarousel = ({ products, title }) => {
     infinite: products.length > 1, // Loop if there are more products than slides shown
     speed: 500, // The speed of the slide transition (0.5 seconds)
     autoplay: true, // Enable autoplay
-    autoplaySpeed: 3000, // Set autoplay speed to 3 seconds
+    autoplaySpeed: 2000, // Set autoplay speed to 3 seconds
     cssEase: 'ease-in-out', // A standard, smooth easing for the transition
     pauseOnHover: true, // Pause the slideshow when the user hovers over it
     slidesToShow: 2, // Default for desktop

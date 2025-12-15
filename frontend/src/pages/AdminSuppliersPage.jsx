@@ -75,9 +75,14 @@ const AdminSuppliersPage = () => {
       if (editingSupplier) {
         await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
       } else {
-        await api.post('/suppliers', supplierData);
+        if (!userInfo?.id) {
+          setError("Authentication error: User ID not found.");
+          return;
+        }
+        await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
       }
       fetchSuppliers();
+      setError(''); // Clear error on success
     } catch (error) {
       // Display the actual error message from the backend
       setError(error.response?.data?.message || error.response?.data || 'Failed to save supplier.');
