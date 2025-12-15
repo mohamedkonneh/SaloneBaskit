@@ -73,7 +73,7 @@ const AdminSuppliersPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(''); // Clear previous errors
-    const supplierData = { name: formState.name, contact_person: formState.contact_person, email: formState.email, phone: formState.phone, address: formState.address };
+    const supplierData = { name: formState.name, contact_person: formState.contact, email: formState.email, phone: formState.phone, address: formState.address };
 
     try {
       if (editingSupplier) {
@@ -90,8 +90,13 @@ const AdminSuppliersPage = () => {
       }
       cancelEdit(); // Clear the form
     } catch (error) {
-      // Display the actual error message from the backend
-      setError(error.response?.data?.message || error.response?.data || 'Failed to save supplier.');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to save supplier.';
+      // Check for the specific duplicate email error and provide a user-friendly message
+      if (typeof errorMessage === 'string' && errorMessage.includes('suppliers_email_key')) {
+        setError('A supplier with this email already exists. Please use a different email.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
