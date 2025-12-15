@@ -155,6 +155,21 @@ const CartPage = () => {
         </div>
         {recLoading && <p style={{textAlign: 'center'}}>Loading more products...</p>}
       </div>
+
+      {/* Mobile Sticky Checkout Bar */}
+      {isMobile && (
+        <div style={styles.stickyFooter}>
+          <div style={styles.stickySummary}>
+            <div>
+              <strong>Total</strong>
+              <div>${subtotal.toFixed(2)}</div>
+            </div>
+            <button onClick={handleCheckout} style={styles.stickyCheckoutButton}>
+              Checkout
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
