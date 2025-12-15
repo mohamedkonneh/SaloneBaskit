@@ -3,6 +3,7 @@ import api from '../api/axiosConfig';
 import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Slider from "react-slick";
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
@@ -74,10 +75,7 @@ const animationStyles = [
 const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const fetchPromoProducts = async () => {
+  const sMobile  ('(maoducts = async () => {
       try {
         const { data } = await api.get('/products/promotions');
         // Add mock seasonal promotion for demonstration
@@ -97,19 +95,7 @@ const PromotionalBanner = () => {
     };
     fetchPromoProducts();
   }, []);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500, // The speed of the slide transition itself (0.5 seconds)
-    slidesToShow: 1,
-    slidesToScroll: 1,
+ ii
     autoplay: true,
     autoplaySpeed: 5000, // Pause for 5 seconds before the next slide
     arrows: !isMobile, // Only show arrows on desktop

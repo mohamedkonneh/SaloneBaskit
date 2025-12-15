@@ -10,13 +10,13 @@ const cardColors = ['#4A90E2', '#D0021B', '#F5A623', '#7ED321', '#BD10E0', '#4A4
 const LandscapeProductsCarousel = ({ products, title }) => {
   const settings = {
     dots: true, // Show dots for better navigation feedback
-    infinite: products.length > 3, // Loop if there are more products than slides shown
+    infinite: products.length > 1, // Loop if there are more products than slides shown
     speed: 500, // The speed of the slide transition (0.5 seconds)
     autoplay: true, // Enable autoplay
-    autoplaySpeed: 2000, // Set autoplay speed to 2 seconds
+    autoplaySpeed: 2000, // Set autoplay speed to 3 seconds
     cssEase: 'ease-in-out', // A standard, smooth easing for the transition
     pauseOnHover: true, // Pause the slideshow when the user hovers over it
-    slidesToShow: 3,
+    slidesToShow: 1,
     slidesToScroll: 1, // Scroll one at a time for a continuous flow
     arrows: true, // Enable navigation arrows for manual control
     responsive: [
