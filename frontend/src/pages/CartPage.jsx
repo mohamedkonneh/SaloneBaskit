@@ -102,7 +102,7 @@ const CartPage = () => {
       {/* Cart Items */}
       <div style={styles.itemsList}>
         {cartItems.map((item) => (
-          <div key={item.id} style={styles.item(isMobile)}>
+          <div key={item.cartItemId} style={styles.item(isMobile)}>
             <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
             <div style={styles.itemContentMobile}>
               <div style={styles.itemDetails}>
@@ -114,17 +114,20 @@ const CartPage = () => {
               <div style={styles.itemActions}>
                 <div style={styles.quantitySelector}>
                   <button
-                    onClick={() => updateQuantity(item.id, Math.max(item.quantity - 1, 1))}
+                    onClick={() => updateQuantity(item.cartItemId, Math.max(item.quantity - 1, 1))}
                     style={styles.quantityBtn}
                   >
                     -
                   </button>
                   <span>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>
+                  <button
+                    onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                    style={styles.quantityBtn}
+                  >
                     +
                   </button>
                 </div>
-                <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}>
+                <button onClick={() => removeFromCart(item.cartItemId)} style={styles.removeBtn}>
                   <FaTrash />
                 </button>
               </div>
