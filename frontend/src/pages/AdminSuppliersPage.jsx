@@ -80,12 +80,8 @@ const AdminSuppliersPage = () => {
         const { data: updatedSupplier } = await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
         setSuppliers(suppliers.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
       } else {
-        if (!userInfo?.id) {
-          setError("Authentication error: User ID not found.");
-          setIsSubmitting(false);
-          return;
-        }
-        const { data: newSupplier } = await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
+        // The user_id is no longer needed as per the backend change
+        const { data: newSupplier } = await api.post('/suppliers', supplierData);
         setSuppliers([newSupplier, ...suppliers]); // Add to the top of the list
       }
       cancelEdit(); // Clear the form
