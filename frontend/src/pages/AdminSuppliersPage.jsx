@@ -71,6 +71,13 @@ const AdminSuppliersPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Guard clause to ensure user info is loaded before submission
+    if (!userInfo?.id) {
+      setError("Authentication error: User information is not available. Please try again.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(''); // Clear previous errors
     const supplierData = { name: formState.name, contact_person: formState.contact, email: formState.email, phone: formState.phone, address: formState.address };
@@ -80,11 +87,6 @@ const AdminSuppliersPage = () => {
         const { data: updatedSupplier } = await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
         setSuppliers(suppliers.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
       } else {
-        if (!userInfo?.id) {
-          setError("Authentication error: User ID not found.");
-          setIsSubmitting(false);
-          return;
-        }
         // Add the user_id to the payload for creation
         const { data: newSupplier } = await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
         setSuppliers([newSupplier, ...suppliers]); // Add to the top of the list
