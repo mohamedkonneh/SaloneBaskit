@@ -36,35 +36,30 @@ const CartPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef();
 
+  // Calculate subtotal
   const subtotal = cartItems.reduce((acc, item) => acc + Number(item.price) * Number(item.quantity), 0);
 
-  const handleCheckout = () => {
-    navigate('/checkout');
-  };
+  const handleCheckout = () => navigate('/checkout');
 
   if (cartItems.length === 0) {
     return (
       <div style={styles.emptyCartContainer}>
-        <h2 style={styles.title}>Your Cart is Empty</h2>
-        <p>Looks like you haven't added anything to your cart yet.</p>
-        <Link to="/" style={styles.shopLink}>Continue Shopping</Link>
+        <p>Your cart is empty.</p>
+        <Link to="/" style={styles.shopLink}>Go to Home</Link>
       </div>
     );
   }
 
-  // Endless scroll logic
+  // Endless scroll for recommended products
   const lastProductElementRef = useCallback(node => {
     if (recLoading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setRecPage(prevPage => prevPage + 1);
-      }
+      if (entries[0].isIntersecting && hasMore) setRecPage(prev => prev + 1);
     });
     if (node) observer.current.observe(node);
   }, [recLoading, hasMore]);
 
-  // Fetch recommended products based on categories in cart
   useEffect(() => {
     const fetchRecommended = async () => {
       if (cartItems.length === 0) return;
@@ -73,14 +68,14 @@ const CartPage = () => {
         const categoriesInCart = [...new Set(cartItems.map(item => item.category))];
         const { data } = await api.get('/products');
         const filtered = data.filter(p =>
-          categoriesInCart.includes(p.category) && !cartItems.find(cartItem => cartItem.id === p.id)
+          categoriesInCart.includes(p.category) &&
+          !cartItems.find(cartItem => cartItem.id === p.id)
         );
-
         const newProducts = filtered.slice((recPage - 1) * 10, recPage * 10);
         setRecommendedProducts(prev => [...prev, ...newProducts]);
         setHasMore(newProducts.length > 0);
       } catch (error) {
-        console.error("Failed to fetch recommendations", error);
+        console.error(error);
       }
       setRecLoading(false);
     };
@@ -90,31 +85,44 @@ const CartPage = () => {
 
   return (
     <div style={styles.page(isMobile)}>
-      <h1 style={styles.title}>Shopping Cart</h1>
+      {/* Back to Home */}
+      <Link to="/" style={styles.backLink}>← Back to Home</Link>
+
       <div style={styles.layout(isMobile)}>
+        {/* Cart Items */}
         {isMobile ? (
           <div style={styles.itemsList}>
-            {cartItems.map(item => (
-              <div key={`${item.id}-${item.color}-${item.size}`} style={styles.item(isMobile)}>
-                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
-                <div style={styles.itemContentMobile}>
-                  <div style={styles.itemDetails}>
-                    <p style={styles.itemName}>{item.name}</p>
-                    <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
-                    {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
-                    {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
-                  </div>
-                  <div style={styles.itemActions}>
-                    <div style={styles.quantitySelector}>
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button>
+            {cartItems.map(item => {
+              const key = `${item.id}-${item.color || ''}-${item.size || ''}`;
+              return (
+                <div key={key} style={styles.item(isMobile)}>
+                  <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+                  <div style={styles.itemContentMobile}>
+                    <div style={styles.itemDetails}>
+                      <p style={styles.itemName}>{item.name}</p>
+                      <p style={styles.itemPrice}>${Number(item.price).toFixed(2)}</p>
+                      {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
+                      {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
                     </div>
-                    <button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button>
+                    <div style={styles.itemActions}>
+                      <div style={styles.quantitySelector}>
+                        <button
+                          onClick={() => updateQuantity(key, item.quantity - 1)}
+                          style={styles.quantityBtn}
+                          disabled={item.quantity <= 1}
+                        >-</button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(key, item.quantity + 1)}
+                          style={styles.quantityBtn}
+                        >+</button>
+                      </div>
+                      <button onClick={() => removeFromCart(key)} style={styles.removeBtn}><FaTrash /></button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <table style={styles.table}>
@@ -128,30 +136,42 @@ const CartPage = () => {
               </tr>
             </thead>
             <tbody>
-              {cartItems.map(item => (
-                <tr key={`${item.id}-${item.color}-${item.size}`} style={styles.tableRow}>
-                  <td style={styles.td}>
-                    <div style={styles.productCell}>
-                      <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
-                      <div>
-                        <p style={styles.itemName}>{item.name}</p>
-                        {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
-                        {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
+              {cartItems.map(item => {
+                const key = `${item.id}-${item.color || ''}-${item.size || ''}`;
+                return (
+                  <tr key={key}>
+                    <td style={styles.td}>
+                      <div style={styles.productCell}>
+                        <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+                        <div>
+                          <p style={styles.itemName}>{item.name}</p>
+                          {item.color && <p style={styles.itemVariant}>Color: {item.color}</p>}
+                          {item.size && <p style={styles.itemVariant}>Size: {item.size}</p>}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td style={styles.td}>${Number(item.price).toFixed(2)}</td>
-                  <td style={styles.td}>
-                    <div style={styles.quantitySelector}>
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.quantityBtn}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.quantityBtn}>+</button>
-                    </div>
-                  </td>
-                  <td style={styles.td}>${(Number(item.quantity) * Number(item.price)).toFixed(2)}</td>
-                  <td style={styles.td}><button onClick={() => removeFromCart(item.id)} style={styles.removeBtn}><FaTrash /></button></td>
-                </tr>
-              ))}
+                    </td>
+                    <td style={styles.td}>${Number(item.price).toFixed(2)}</td>
+                    <td style={styles.td}>
+                      <div style={styles.quantitySelector}>
+                        <button
+                          onClick={() => updateQuantity(key, item.quantity - 1)}
+                          style={styles.quantityBtn}
+                          disabled={item.quantity <= 1}
+                        >-</button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(key, item.quantity + 1)}
+                          style={styles.quantityBtn}
+                        >+</button>
+                      </div>
+                    </td>
+                    <td style={styles.td}>${(Number(item.price) * Number(item.quantity)).toFixed(2)}</td>
+                    <td style={styles.td}>
+                      <button onClick={() => removeFromCart(key)} style={styles.removeBtn}><FaTrash /></button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -177,54 +197,45 @@ const CartPage = () => {
         )}
       </div>
 
-      {/* Recommended Products Section */}
+      {/* Recommended Products */}
       <div style={styles.recommendationsContainer}>
         <h2 style={styles.recommendationsTitle}>You Might Also Like</h2>
         <div style={styles.productGrid(isMobile)}>
           {recommendedProducts.map((product, index) => {
-            const isLastElement = recommendedProducts.length === index + 1;
-            return <div ref={isLastElement ? lastProductElementRef : null} key={product.id}><ProductCard product={product} /></div>;
+            const isLast = recommendedProducts.length === index + 1;
+            return <div key={product.id} ref={isLast ? lastProductElementRef : null}><ProductCard product={product} /></div>;
           })}
         </div>
         {recLoading && <p style={{ textAlign: 'center' }}>Loading more products...</p>}
       </div>
 
-      {/* Mobile Sticky Checkout Bar */}
-      {isMobile && cartItems.length > 0 && (
-        <MobileCheckoutBar total={subtotal} onCheckout={handleCheckout} />
-      )}
+      {/* Mobile Sticky Checkout */}
+      {isMobile && cartItems.length > 0 && <MobileCheckoutBar total={subtotal} onCheckout={handleCheckout} />}
     </div>
   );
 };
 
+// --- Styles ---
 const styles = {
-  page: (isMobile) => ({
-    maxWidth: '1200px',
-    margin: '40px auto',
-    padding: isMobile ? '0 15px 100px 15px' : '0 20px',
-    fontFamily: 'system-ui, sans-serif',
-  }),
-  title: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '30px' },
-  layout: (isMobile) => ({ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '30px' }),
+  page: (isMobile) => ({ maxWidth: '1200px', margin: '20px auto', padding: isMobile ? '0 15px 100px 15px' : '0 20px', fontFamily: 'system-ui, sans-serif' }),
+  backLink: { display: 'inline-block', marginBottom: '20px', textDecoration: 'none', color: '#007bff', fontWeight: 'bold' },
   itemsList: { display: 'flex', flexDirection: 'column', gap: '20px' },
-  table: { width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' },
-  tableHead: { borderBottom: '2px solid #dee2e6' },
-  th: { padding: '15px', textAlign: 'left', fontWeight: '600', color: '#495057', fontSize: '0.9rem', textTransform: 'uppercase' },
-  thProduct: { width: '50%' },
-  tableRow: { borderBottom: '1px solid #f1f3f5' },
-  td: { padding: '15px', verticalAlign: 'middle' },
-  productCell: { display: 'flex', alignItems: 'center', gap: '15px' },
-  item: (isMobile) => ({ display: 'flex', alignItems: 'center', backgroundColor: 'white', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', gap: '15px', flexDirection: 'row', textAlign: 'left' }),
-  itemImage: (isMobile) => ({ width: isMobile ? '70px' : '80px', height: isMobile ? '70px' : '80px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }),
+  item: (isMobile) => ({ display: 'flex', alignItems: 'center', backgroundColor: 'white', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', gap: '15px' }),
   itemContentMobile: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 },
   itemDetails: { flexGrow: 1 },
   itemName: { fontWeight: '600', margin: '0 0 5px 0' },
   itemPrice: { color: '#555', margin: 0 },
   itemVariant: { fontSize: '0.85rem', color: '#777', margin: '4px 0 0 0' },
-  itemActions: { display: 'flex', alignItems: 'center', gap: '20px', marginTop: '10px' },
+  itemActions: { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' },
   quantitySelector: { display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '5px' },
-  quantityBtn: { background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer', fontSize: '1rem' },
+  quantityBtn: { background: 'none', border: 'none', padding: '6px 10px', cursor: 'pointer', fontSize: '1rem' },
   removeBtn: { background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1rem' },
+  itemImage: (isMobile) => ({ width: isMobile ? '70px' : '80px', height: isMobile ? '70px' : '80px', objectFit: 'cover', borderRadius: '4px' }),
+  table: { width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' },
+  th: { padding: '15px', textAlign: 'left', fontWeight: '600', color: '#495057', fontSize: '0.9rem', textTransform: 'uppercase' },
+  thProduct: { width: '50%' },
+  td: { padding: '15px', verticalAlign: 'middle' },
+  productCell: { display: 'flex', alignItems: 'center', gap: '15px' },
   summary: { backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', height: 'fit-content' },
   summaryTitle: { marginTop: 0, fontSize: '1.4rem', borderBottom: '1px solid #eee', paddingBottom: '15px' },
   summaryRow: { display: 'flex', justifyContent: 'space-between', margin: '15px 0' },
