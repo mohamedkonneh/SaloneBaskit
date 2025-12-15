@@ -3,6 +3,7 @@ import api from '../api/axiosConfig';
 import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Slider from "react-slick";
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 // You need to import the slick-carousel css files
 import "slick-carousel/slick/slick.css"; 
@@ -75,6 +76,27 @@ const PromotionalBanner = () => {
   const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  useEffect(() => {
+    const fetchPromoProducts = async () => {
+      try {
+        const { data } = await api.get('/products/promotions');
+        // Add mock seasonal promotion for demonstration
+        const seasonalPromo = {
+          id: 'seasonal-1',
+          name: 'Summer Collection is Here!',
+          description: 'Up to 40% off on all summer wear.',
+          image_url: 'https://placehold.co/1200x400/007bff/white?text=Summer+Sale',
+          is_seasonal: true,
+        };
+        setPromoProducts([seasonalPromo, ...data]);
+      } catch (error) {
+        console.error("Failed to fetch promotional products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPromoProducts();
+  }, []);
 
   const settings = {
     dots: true,
