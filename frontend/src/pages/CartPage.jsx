@@ -123,15 +123,8 @@ const CartPage = () => {
           </table>
         )}
 
-        {isMobile ? (
-          <div style={styles.stickyFooter}>
-            <div style={styles.stickySummary}>
-              <span>Total: <strong>${subtotal.toFixed(2)}</strong></span>
-              <button onClick={handleCheckout} style={styles.stickyCheckoutButton}>Checkout</button>
-            </div>
-          </div>
-        ) : (
-          <div style={styles.summary}>
+        {!isMobile && (
+          <div style={styles.summary}> {/* Desktop Summary */}
             <h2 style={styles.summaryTitle}>Order Summary</h2>
             <div style={styles.summaryRow}>
               <span>Subtotal</span>
