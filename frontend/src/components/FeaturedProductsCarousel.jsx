@@ -75,8 +75,8 @@ const FeaturedProductsCarousel = ({ products, title, onProductClick }) => {
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: 3, // Show 3 items on mobile
-          slidesToScroll: 3, // Scroll 3 at a time on mobile
+          slidesToShow: 2, // Show 2 items on mobile
+          slidesToScroll: 2, // Scroll 2 at a time on mobile
         }
       }
     ]
