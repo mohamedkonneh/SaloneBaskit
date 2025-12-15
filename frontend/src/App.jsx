@@ -44,11 +44,10 @@ function App() {
 
   return (
     <div style={styles.pageContainer}>
-      {!isAdminRoute && <Header />} {/* 3. Add Header */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <main style={styles.mainContent(isAdminRoute)}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<><Header /><HomePage /></>} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/categories" element={<CategoryLayout />}>

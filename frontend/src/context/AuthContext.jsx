@@ -25,22 +25,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-  try {
-    // The 'data' object itself is the user info payload from the backend.
-    const { data } = await api.post('/users/login', { email, password });
+    try {
+      // The 'data' object itself is the user info payload from the backend.
+      const { data } = await api.post('/users/login', { email, password });
 
-    localStorage.setItem('userInfo', JSON.stringify(data));
-    setUserInfo(data);
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      setUserInfo(data);
 
-    return data;
-  } catch (error) {
-    const message =
-      error.response?.data?.message ||
-      'An unexpected error occurred. Please try again.';
-    throw new Error(message);
-  }
-};
-
+      return data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        'An unexpected error occurred. Please try again.';
+      throw new Error(message);
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem('userInfo');
