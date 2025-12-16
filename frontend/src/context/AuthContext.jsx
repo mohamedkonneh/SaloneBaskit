@@ -59,3 +59,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+// Custom hook to easily access the context
+export const useAuth = () => React.useContext(AuthContext);
