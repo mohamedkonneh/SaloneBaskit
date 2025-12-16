@@ -81,7 +81,8 @@ const CategoryProductPage = () => {
           ) : <p>No products found in this category.</p>
       )}
       </main>
-  );
+    </div>
+  ); // Added missing closing parenthesis
 };
 const styles = {
   title: {
