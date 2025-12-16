@@ -69,13 +69,11 @@ const CartPage = () => {
                     <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
                   </div>
                   <div style={styles.itemActions}>
-                    <input 
-                      type="number" 
-                      value={item.quantity} 
-                      onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                      style={styles.quantityInput}
-                      min="1"
-                    />
+                    <div style={styles.quantityStepper}>
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.stepperButton}>-</button>
+                      <span style={styles.quantityDisplay}>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.stepperButton}>+</button>
+                    </div>
                     <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
                   </div>
                 </div>
@@ -150,8 +148,17 @@ const styles = {
   itemName: { fontSize: '1.1rem', margin: '0 0 10px 0' },
   itemPrice: { fontSize: '1rem', color: '#555', margin: 0 },
   itemActions: { display: 'flex', alignItems: 'center', gap: '10px' },
-  quantityInput: { width: '50px', textAlign: 'center', padding: '5px' },
   removeButton: { border: 'none', background: 'transparent', color: '#dc3545', cursor: 'pointer' },
+  quantityStepper: {
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+  },
+  stepperButton: {
+    border: 'none', background: 'transparent', cursor: 'pointer', padding: '5px 10px', fontSize: '1rem'
+  },
+  quantityDisplay: { padding: '0 10px', fontSize: '1rem' },
   summary: { flex: 1, backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', height: 'fit-content' },
   summaryTitle: { fontSize: '1.5rem', marginBottom: '20px' },
   summaryRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' },
