@@ -25,10 +25,10 @@ const FeaturedProductCard = ({ product }) => {
 
 const styles = {
   card: {
-    border: '1px solid #eee',
+    border: 'none', // Removed border to ensure price has no background border
     borderRadius: '12px',
     overflow: 'hidden',
-    backgroundColor: '#fff',
+    backgroundColor: 'none', // Removed background color
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
