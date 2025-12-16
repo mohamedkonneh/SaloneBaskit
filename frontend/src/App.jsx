@@ -50,10 +50,8 @@ function App() {
           <Route path="/" element={<><Header /><HomePage /></>} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/categories" element={<CategoryLayout />}>
-            <Route index element={<CategoriesPage />} />
-            <Route path=":categoryName" element={<CategoryProductPage />} />
-          </Route>
+          <Route path="/categories" element={<CategoryProductPage />} />
+          <Route path="/categories/:categoryName" element={<CategoryProductPage />} />
           <Route path="/product/:productId" element={<ProductDetailsPage />} />
           
           {/* Static & Info Pages */}
