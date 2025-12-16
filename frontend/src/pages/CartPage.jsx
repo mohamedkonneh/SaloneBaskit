@@ -6,7 +6,7 @@ import { getImageUrl } from './imageUrl';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
-import { FaArrowLeft, FaPlus } from 'react-icons/fa';
+import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, addToCart } = useCart();
@@ -14,6 +14,7 @@ const CartPage = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const navigate = useNavigate();
   const [suggestedProducts, setSuggestedProducts] = useState([]);
+  const [selectedItems, setSelectedItems] = useState(new Set());
   
   const cartTotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -40,6 +41,21 @@ const CartPage = () => {
     fetchSuggestedProducts();
   }, [isMobile, cartItems.length]); // Re-fetch if cart content changes
 
+  const handleSelectItem = (itemId) => {
+    const newSelectedItems = new Set(selectedItems);
+    if (newSelectedItems.has(itemId)) {
+      newSelectedItems.delete(itemId);
+    } else {
+      newSelectedItems.add(itemId);
+    }
+    setSelectedItems(newSelectedItems);
+  };
+
+  const handleRemoveSelected = () => {
+    // This would call a new function in CartContext, e.g., `removeMultiple(selectedItems)`
+    console.log("Removing selected items:", Array.from(selectedItems));
+  };
+
   return (
     <div style={styles.container}>
       {!isMobile && <h1 style={styles.title}>Your Shopping Cart</h1>}
@@ -62,8 +78,21 @@ const CartPage = () => {
           <div style={styles.cartLayout(isMobile)}>
             <div style={styles.itemsList}>
               {cartItems.map(item => (
-                <div key={item.id} style={styles.item(isMobile)}>
-                  <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
+                <div key={item.id} style={styles.item(isMobile, item.count_in_stock < 10)}>
+                  <div style={styles.selectionContainer}>
+                    <input 
+                      type="checkbox" 
+                      style={styles.checkbox}
+                      checked={selectedItems.has(item.id)}
+                      onChange={() => handleSelectItem(item.id)}
+                    />
+                    <div style={styles.imageContainer}>
+                      <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
+                      {item.count_in_stock < 10 && (
+                        <span style={styles.stockIndicator}>Only {item.count_in_stock} left!</span>
+                      )}
+                    </div>
+                  </div>
                   <div style={styles.itemDetails}>
                     <div style={styles.itemInfo}>
                       <h3 style={styles.itemName}>{item.name}</h3>
@@ -75,12 +104,18 @@ const CartPage = () => {
                         <span style={styles.quantityDisplay}>{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.stepperButton}>+</button>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
+                      <button onClick={() => removeFromCart(item.id)} style={styles.removeButton} title="Remove item">
+                        <FaTrash />
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
+            {selectedItems.size > 0 && (
+              <button onClick={handleRemoveSelected} style={styles.removeSelectedButton}>Remove Selected ({selectedItems.size})</button>
+            )}
 
             {!isMobile && (
               <div style={styles.summary}>
@@ -137,14 +172,18 @@ const styles = {
     flexDirection: isMobile ? 'column' : 'row' 
   }),
   itemsList: { flex: 2 },
-  item: (isMobile) => ({ 
+  item: (isMobile, isLowStock) => ({ 
     display: 'flex',
     alignItems: 'flex-start', // Align items to the top
     marginBottom: '20px', 
     borderBottom: '1px solid #eee', 
     paddingBottom: '20px',
     gap: '15px',
+    animation: isLowStock ? 'shake 5s infinite' : 'none',
   }),
+  selectionContainer: { display: 'flex', alignItems: 'center', gap: '15px' },
+  checkbox: { width: '20px', height: '20px', accentColor: '#004085' },
+  imageContainer: { position: 'relative' },
   itemImage: { 
     width: '80px', // Smaller image
     height: '80px', 
@@ -152,12 +191,22 @@ const styles = {
     borderRadius: '8px',
     flexShrink: 0,
   },
+  stockIndicator: {
+    position: 'absolute',
+    bottom: '-18px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    color: '#dc3545',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+  },
   itemDetails: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   itemInfo: { marginBottom: '15px' },
   itemName: { fontSize: '1.1rem', margin: '0 0 10px 0' },
   itemPrice: { fontSize: '1rem', color: '#555', margin: 0 },
   itemActions: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-  removeButton: { border: 'none', background: 'transparent', color: '#dc3545', cursor: 'pointer' },
+  removeButton: { border: 'none', background: 'transparent', color: '#6c757d', cursor: 'pointer', fontSize: '1rem' },
   quantityStepper: {
     display: 'flex',
     alignItems: 'center',
@@ -172,6 +221,16 @@ const styles = {
   summaryTitle: { fontSize: '1.5rem', marginBottom: '20px' },
   summaryRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' },
   summaryTotal: { fontWeight: 'bold', fontSize: '1.2rem', borderTop: '1px solid #ddd', paddingTop: '15px' },
+  removeSelectedButton: {
+    width: '100%',
+    padding: '12px',
+    border: '1px solid #dc3545',
+    borderRadius: '8px',
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
   checkoutButton: { display: 'block', width: '100%', padding: '15px', border: 'none', borderRadius: '4px', backgroundColor: '#004085', color: 'white', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' },
   // --- Mobile-only styles ---
   mobileTopBar: { position: 'sticky', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', backgroundColor: 'white', zIndex: 10, borderBottom: '1px solid #eee', marginBottom: '15px' },
@@ -197,6 +256,12 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
+  },
+  // Keyframe animation for shaking
+  '@keyframes shake': {
+    '0%, 100%': { transform: 'translateX(0)' },
+    '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
+    '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' },
   },
 };
 
