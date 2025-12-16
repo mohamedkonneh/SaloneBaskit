@@ -42,6 +42,7 @@ const ProfilePage = () => {
   const { userInfo, logout, updateUserInfo } = useAuth();
   const navigate = useNavigate();
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -53,6 +54,7 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setIsUploading(true);
     setPhotoPreview(URL.createObjectURL(file)); // Show preview immediately
 
     const formData = new FormData();
@@ -67,6 +69,8 @@ const ProfilePage = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Photo upload failed.');
       setPhotoPreview(null); // Clear preview on error
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -98,8 +102,10 @@ const ProfilePage = () => {
       <div style={styles.layout(isMobile)}>
         <aside style={styles.profileCard}>
           <label htmlFor="photo-upload" style={styles.photoContainer}>
-            <img src={photoPreview || userInfo?.photoUrl || '/images/default-avatar.png'} alt="Profile" style={styles.profilePhoto} />
-            <div style={styles.photoOverlay}>Edit</div>
+            <img src={photoPreview || (userInfo?.photoUrl ? `${api.defaults.baseURL}${userInfo.photoUrl}` : '/images/default-avatar.png')} alt="Profile" style={styles.profilePhoto} />
+            <div style={styles.photoOverlay}>
+              {isUploading ? '...' : 'Edit'}
+            </div>
           </label>
           <input id="photo-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
           <h2 style={styles.profileName}>{userInfo?.name || 'Guest User'}</h2>

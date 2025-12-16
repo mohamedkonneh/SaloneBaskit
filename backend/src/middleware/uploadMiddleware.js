@@ -1,10 +1,11 @@
- import multer from 'multer';
-import path from 'path';
+const multer = require('multer');
+const path = require('path');
 
 // Set up storage engine
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Make sure this 'uploads' directory exists in the backend
+    // The 'uploads' directory should be at the root of the backend project
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
     // Create a unique filename to prevent overwrites
@@ -25,4 +26,4 @@ function checkFileType(file, cb) {
   }
 }
 
-export const upload = multer({ storage, fileFilter: (req, file, cb) => checkFileType(file, cb) });
+module.exports = { upload: multer({ storage, fileFilter: (req, file, cb) => checkFileType(file, cb) }) };

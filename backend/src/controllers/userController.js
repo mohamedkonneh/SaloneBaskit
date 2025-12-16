@@ -174,4 +174,37 @@ const getUserMailbox = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, getUsers, deleteUser, getUserMailbox };
+const uploadProfilePhoto = async (req, res) => {
+  try {
+    const user = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an image file' });
+    }
+
+    // The path should be what the browser can access, e.g., /uploads/photo-1629...
+    const photoUrl = `/uploads/${req.file.filename}`;
+
+    const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
+    const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);
+    const updatedUser = updatedUserResult.rows[0];
+
+    res.json({
+      id: updatedUser.id,
+      name: updatedUser.username,
+      email: updatedUser.email,
+      isAdmin: updatedUser.is_admin,
+      photoUrl: updatedUser.photo_url,
+      token: generateToken(updatedUser.id),
+    });
+  } catch (error) {
+    console.error('Error uploading profile photo:', error);
+    res.status(500).json({ message: 'Server error during photo upload.' });
+  }
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, getUsers, deleteUser, getUserMailbox, uploadProfilePhoto };
