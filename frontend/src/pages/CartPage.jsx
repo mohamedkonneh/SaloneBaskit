@@ -1,71 +1,133 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { getImageUrl } from './imageUrl';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { useEffect, useState } from 'react';
+import api from '../api/axiosConfig';
+import { FaArrowLeft, FaPlus } from 'react-icons/fa';
 
 const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, addToCart } = useCart();
   const { convertPrice } = useSettings();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const navigate = useNavigate();
+  const [suggestedProducts, setSuggestedProducts] = useState([]);
   
   const cartTotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
+  useEffect(() => {
+    const fetchSuggestedProducts = async () => {
+      // Only fetch suggestions on mobile when the cart is not empty
+      if (isMobile && cartItems.length > 0) {
+        try {
+          const { data } = await api.get('/products');
+          // Exclude items already in the cart from suggestions
+          const cartItemIds = new Set(cartItems.map(item => item.id));
+          const filteredProducts = data.filter(p => !cartItemIds.has(p.id));
+          // Shuffle and take a few products to display
+          const shuffled = filteredProducts.sort(() => 0.5 - Math.random());
+          setSuggestedProducts(shuffled.slice(0, 6)); // Show up to 6 suggestions
+        } catch (error) {
+          console.error("Failed to fetch suggested products", error);
+        }
+      }
+    };
+    fetchSuggestedProducts();
+  }, [isMobile, cartItems.length]); // Re-fetch if cart content changes
+
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Your Shopping Cart</h1>
+      {!isMobile && <h1 style={styles.title}>Your Shopping Cart</h1>}
+
       {cartItems.length === 0 ? (
         <p style={styles.text}>Your cart is currently empty. <Link to="/categories">Start shopping!</Link></p>
       ) : (
-        <div style={styles.cartLayout(isMobile)}>
-          <div style={styles.itemsList}>
-            {cartItems.map(item => (
-              <div key={item.id} style={styles.item(isMobile)}>
-                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
-                <div style={styles.itemDetails}>
-                  <h3 style={styles.itemName}>{item.name}</h3>
-                  <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
-                </div>
-                <div style={styles.itemActions}>
-                  <input 
-                    type="number" 
-                    value={item.quantity} 
-                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                    style={styles.quantityInput}
-                    min="1"
-                  />
-                  <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
-                </div>
+        <>
+          {isMobile && (
+            <div style={styles.mobileTopBar}>
+              <button onClick={() => navigate(-1)} style={styles.backButton}><FaArrowLeft /></button>
+              <div style={styles.mobileTotal}>
+                <span>Total: </span>
+                <strong>{convertPrice(cartTotal)}</strong>
               </div>
-            ))}
+              <Link to="/checkout" style={styles.mobileCheckoutButton}>Checkout</Link>
+            </div>
+          )}
+
+          <div style={styles.cartLayout(isMobile)}>
+            <div style={styles.itemsList}>
+              {cartItems.map(item => (
+                <div key={item.id} style={styles.item(isMobile)}>
+                  <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+                  <div style={styles.itemDetails}>
+                    <h3 style={styles.itemName}>{item.name}</h3>
+                    <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
+                  </div>
+                  <div style={styles.itemActions}>
+                    <input 
+                      type="number" 
+                      value={item.quantity} 
+                      onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                      style={styles.quantityInput}
+                      min="1"
+                    />
+                    <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {!isMobile && (
+              <div style={styles.summary}>
+                <h2 style={styles.summaryTitle}>Order Summary</h2>
+                <div style={styles.summaryRow}>
+                  <span>Subtotal</span>
+                  <span>{convertPrice(cartTotal)}</span>
+                </div>
+                <div style={styles.summaryRow}>
+                  <span>Shipping</span>
+                  <span>FREE</span>
+                </div>
+                <div style={{...styles.summaryRow, ...styles.summaryTotal}}>
+                  <span>Total</span>
+                  <span>{convertPrice(cartTotal)}</span>
+                </div>
+                <Link to="/checkout" style={styles.checkoutButton}>Proceed to Checkout</Link>
+              </div>
+            )}
           </div>
-          <div style={styles.summary}>
-            <h2 style={styles.summaryTitle}>Order Summary</h2>
-            <div style={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>{convertPrice(cartTotal)}</span>
+
+          {isMobile && (
+            <div style={styles.suggestionsSection}>
+              <h2 style={styles.suggestionsTitle}>You Might Also Like</h2>
+              <div style={styles.suggestionsGrid}>
+                {suggestedProducts.map(p => (
+                  <div key={p.id} style={styles.suggestionCard}>
+                    <Link to={`/product/${p.id}`}>
+                      <img src={getImageUrl(p.image_urls[0])} alt={p.name} style={styles.suggestionImage} />
+                    </Link>
+                    <div style={styles.suggestionDetails}>
+                      <span style={styles.suggestionPrice}>{convertPrice(p.price)}</span>
+                      <button onClick={() => addToCart(p, 1)} style={styles.suggestionAddButton}><FaPlus /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={styles.summaryRow}>
-              <span>Shipping</span>
-              <span>FREE</span>
-            </div>
-            <div style={{...styles.summaryRow, ...styles.summaryTotal}}>
-              <span>Total</span>
-              <span>{convertPrice(cartTotal)}</span>
-            </div>
-            <Link to="/checkout" style={styles.checkoutButton}>Proceed to Checkout</Link>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );
 };
 
 const styles = {
+  // ... existing styles
   container: { padding: '20px', maxWidth: '1200px', margin: '0 auto' },
   title: { fontSize: '2.2rem', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '15px' },
   text: { fontSize: '1.1rem', lineHeight: '1.6', textAlign: 'center' },
@@ -76,7 +138,7 @@ const styles = {
   }),
   itemsList: { flex: 2 },
   item: (isMobile) => ({ 
-    display: 'flex', 
+    display: 'flex',
     alignItems: 'center', 
     marginBottom: '20px', 
     borderBottom: '1px solid #eee', 
@@ -84,7 +146,7 @@ const styles = {
     flexDirection: isMobile ? 'column' : 'row',
   }),
   itemImage: (isMobile) => ({ width: isMobile ? '100%' : '100px', height: isMobile ? 'auto' : '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: isMobile ? '15px' : '0' }),
-  itemDetails: { flex: 1, marginLeft: '20px' },
+  itemDetails: { flex: 1, marginLeft: '20px', width: '100%' },
   itemName: { fontSize: '1.1rem', margin: '0 0 10px 0' },
   itemPrice: { fontSize: '1rem', color: '#555', margin: 0 },
   itemActions: { display: 'flex', alignItems: 'center', gap: '10px' },
@@ -95,6 +157,31 @@ const styles = {
   summaryRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' },
   summaryTotal: { fontWeight: 'bold', fontSize: '1.2rem', borderTop: '1px solid #ddd', paddingTop: '15px' },
   checkoutButton: { display: 'block', width: '100%', padding: '15px', border: 'none', borderRadius: '4px', backgroundColor: '#004085', color: 'white', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' },
+  // --- Mobile-only styles ---
+  mobileTopBar: { position: 'sticky', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', backgroundColor: 'white', zIndex: 10, borderBottom: '1px solid #eee', marginBottom: '15px' },
+  backButton: { background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' },
+  mobileTotal: { fontSize: '1rem' },
+  mobileCheckoutButton: { padding: '8px 16px', backgroundColor: '#004085', color: 'white', textDecoration: 'none', borderRadius: '20px', fontSize: '0.9rem' },
+  // --- Suggestion styles ---
+  suggestionsSection: { marginTop: '40px', borderTop: '8px solid #f4f4f4', paddingTop: '20px' },
+  suggestionsTitle: { fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '20px' },
+  suggestionsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' },
+  suggestionCard: { border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' },
+  suggestionImage: { width: '100%', height: '150px', objectFit: 'cover', backgroundColor: '#f8f9fa' },
+  suggestionDetails: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px' },
+  suggestionPrice: { fontWeight: 'bold', fontSize: '0.9rem' },
+  suggestionAddButton: {
+    background: '#eef6ff',
+    border: '1px solid #004085',
+    color: '#004085',
+    borderRadius: '50%',
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  },
 };
 
 export default CartPage;
