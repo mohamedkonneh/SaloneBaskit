@@ -8,7 +8,7 @@ import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import CategoriesPage from './pages/CategoriesPage';
 import CartPage from './pages/CartPage';
-import AccountPage from './pages/AccountPage';
+import ProfilePage from './pages/ProfilePage.jsx'; // Import the correct ProfilePage
 import BottomNav from './components/BottomNav'; // 2. Import BottomNav
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -68,8 +68,8 @@ function App() {
           {/* Protected Routes */}
           <Route path="/suppliers" element={<ProtectedRoute><SuppliersListPage /></ProtectedRoute>} />
           <Route path="/suppliers/:supplierId" element={<ProtectedRoute><SupplierPage /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} /> 
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><MyOrdersPage /></ProtectedRoute>} />
           <Route path="/my-orders/:orderId" element={<ProtectedRoute><MyOrderDetailsPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFoundPage />} />
