@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -18,14 +19,17 @@ const LoginPage = () => {
       // The login function returns the user object on success
       const userInfo = await login(email, password);
 
+      toast.success('Login successful! Welcome back.');
+
       // Conditionally redirect based on the isAdmin flag
       if (userInfo && userInfo.isAdmin) {
         navigate('/admin'); // Redirect admins to the dashboard
       } else {
-        navigate('/'); // Redirect regular users to the home page
+        navigate('/profile'); // Redirect regular users to their profile
       }
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
