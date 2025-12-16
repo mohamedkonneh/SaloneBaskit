@@ -1,33 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Correct import path
-import { toast } from 'react-toastify'; // Import toast for notifications
+import { useAuth } from '../hooks/useAuth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = async (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
-      // The login function from context now handles the API call
+      // The login function returns the user object on success
       const userInfo = await login(email, password);
-      toast.success('Login successful! Welcome back.');
 
-      // Conditionally redirect after successful login
+      // Conditionally redirect based on the isAdmin flag
       if (userInfo && userInfo.isAdmin) {
         navigate('/admin'); // Redirect admins to the dashboard
       } else {
-        navigate('/profile'); // Redirect regular users to their profile
+        navigate('/'); // Redirect regular users to the home page
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      toast.error(errorMessage);
-      console.error('Login error:', err.response || err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -39,7 +37,8 @@ const LoginPage = () => {
         <h1 style={styles.title}>SaloneBaskit</h1>
         <p style={styles.subtitle}>Welcome back! Please log in to your account.</p>
 
-        <form onSubmit={onSubmit} noValidate>
+        {error && <p style={{color: 'red', marginBottom: '1rem'}}>{error}</p>}
+        <form onSubmit={submitHandler} noValidate>
           <div style={styles.formGroup}>
             <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} disabled={loading} required />
           </div>

@@ -1,50 +1,61 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 
+// Create the context that components will consume
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // To handle initial auth check
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // On initial app load, try to load user from localStorage
   useEffect(() => {
-    // Check for user data in localStorage when the app loads
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-      } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        localStorage.removeItem('user');
+    try {
+      const stored = localStorage.getItem('userInfo');
+      if (stored) {
+        setUserInfo(JSON.parse(stored));
       }
+    } catch (err) {
+      // If parsing fails, clear the broken item
+      localStorage.removeItem('userInfo');
+      setUserInfo(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false); // Finished checking auth state
   }, []);
 
   const login = async (email, password) => {
-    // The login function now handles the API call itself
-    const res = await api.post('/users/login', { email, password });
-    const userData = res.data;
+    try {
+      // The 'data' object itself is the user info payload from the backend.
+      const { data } = await api.post('/users/login', { email, password });
 
-    localStorage.setItem('user', JSON.stringify(userData));
-    api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-    setUser(userData);
-    return userData; // Return user data for conditional redirects
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      setUserInfo(data);
+
+      return data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        'An unexpected error occurred. Please try again.';
+      throw new Error(message);
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
-    delete api.defaults.headers.common['Authorization'];
-    setUser(null);
+    localStorage.removeItem('userInfo');
+    setUserInfo(null);
   };
 
-  const value = { user, login, logout, loading };
+  const updateUserInfo = (newInfo) => {
+    localStorage.setItem('userInfo', JSON.stringify(newInfo));
+    setUserInfo(newInfo);
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
+  return (
+    <AuthContext.Provider
+      value={{ userInfo, loading, login, logout, updateUserInfo }} // Ensure updateUserInfo is exported
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
