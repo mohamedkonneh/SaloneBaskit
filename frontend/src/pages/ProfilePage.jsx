@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import SettingsPage from './SettingsPage'; // We'll render this component directly
 import { FaUser, FaCog, FaBoxOpen, FaInfoCircle, FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext'; // Assuming this is your auth context hook
+import { toast } from 'react-toastify';
 
 // Placeholder components for different sections
 const ProfileInfo = () => <div style={styles.contentPanel}><h2>Profile Information</h2><p>Edit your name, email, and password here.</p></div>;
@@ -20,11 +22,13 @@ const InfoPages = () => (
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Implement your logout logic here (e.g., clearing auth token, redirecting)
-    console.log("User logged out");
-    // Example: auth.logout(); navigate('/login');
+    logout();
+    toast.info("You have been logged out successfully.");
+    navigate('/login');
   };
 
   const renderContent = () => {
