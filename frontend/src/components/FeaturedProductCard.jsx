@@ -9,7 +9,9 @@ const FeaturedProductCard = ({ product }) => {
 
   if (!product) return null;
 
-  const imageUrl = product.image_url ? getImageUrl(product.image_url) : PLACEHOLDER_IMAGE;
+  // Correctly use the 'image_urls' array to get the first image
+  const imageUrl = product.image_urls && product.image_urls.length > 0
+    ? getImageUrl(product.image_urls[0]) : PLACEHOLDER_IMAGE;
 
   return (
     <div style={styles.card}>
@@ -28,7 +30,7 @@ const styles = {
     border: 'none', // Removed border to ensure price has no background border
     borderRadius: '12px',
     overflow: 'hidden',
-    backgroundColor: 'none', // Removed background color
+    backgroundColor: 'transparent', // Use 'transparent' instead of 'none'
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
@@ -49,7 +51,7 @@ const styles = {
     objectFit: 'cover',
   },
   details: { padding: '12px' },
-  price: { fontSize: '1.1rem', fontWeight: 'bold', color: '#333' },
+  price: { fontSize: '0.9rem', fontWeight: 'bold', color: '#333' }, // Reduced font size for better fit
 };
 
 export default FeaturedProductCard;
