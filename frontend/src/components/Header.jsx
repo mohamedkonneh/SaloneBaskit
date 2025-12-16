@@ -123,10 +123,10 @@ const Header = () => {
           ) : (
             <>
               <Link to="/" style={styles.logo}>SaloneBaskit</Link>
-              <div style={styles.desktopNav}>{renderNavLinks()}</div>
+              <div style={styles.desktopNav}>{renderNavLinks(false)}</div>
               <div style={{flex: 1, maxWidth: '600px'}}><SearchBar /></div>
               <div style={styles.actionIcons}>
-                <Link to="/profile" style={styles.iconLink}><UserIcon /></Link>
+                <Link to="/profile" style={styles.iconLink} title="Profile"><UserIcon /></Link>
                 <Link to="/cart" style={styles.iconLink}>
                   <CartIcon />
                   {/* Optional: Cart count */}
@@ -139,7 +139,7 @@ const Header = () => {
       </header>
       {isMobileMenuOpen && (
         <div style={styles.mobileMenu}>
-          {renderNavLinks(true)}
+          {isMobile && renderNavLinks(true)}
            <div style={styles.mobileActionIcons}>
               <Link to="/profile" style={styles.iconLink} onClick={() => setMobileMenuOpen(false)}><UserIcon /> Profile</Link>
               <Link to="/cart" style={styles.iconLink} onClick={() => setMobileMenuOpen(false)}><CartIcon /> Cart</Link>
@@ -258,7 +258,7 @@ const styles = {
     fontWeight: 'bold',
     color: '#004085',
     textDecoration: 'none',
-    textAlign: 'left',
+    textAlign: 'center',
     marginTop: '8px', // Space between search bar and logo
   },
   // --- Search Bar Styles ---
