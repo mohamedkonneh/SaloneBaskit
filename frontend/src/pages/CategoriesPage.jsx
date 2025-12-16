@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { getImageUrl } from './imageUrl';
-
 const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300/e9ecef/6c757d?text=No+Image';
 
 const CategoriesPage = () => {
