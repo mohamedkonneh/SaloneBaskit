@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { FaLanguage, FaMoneyBillWave } from 'react-icons/fa';
+import { FaLanguage, FaMoneyBillWave, FaMoon, FaSun } from 'react-icons/fa';
 import { useSettings } from '../context/SettingsContext'; // Import the custom hook
+import { useTheme } from '../context/ThemeContext'; // Import the theme hook
 
 const SettingsPage = () => {
   const { settings: globalSettings, setSettings: setGlobalSettings } = useSettings();
-  // Use local state for the form, initialized from global settings
+  const { theme, toggleTheme } = useTheme();
   const [localSettings, setLocalSettings] = useState(globalSettings);
 
   const handleSettingChange = (e) => {
@@ -61,6 +62,23 @@ const SettingsPage = () => {
             <option value="GBP">GBP - British Pound</option>
           </select>
         </div>
+
+        {/* Theme Setting */}
+        <div style={styles.settingCard}>
+          <div style={styles.cardHeader}>
+            {theme === 'light' ? <FaSun style={styles.icon} /> : <FaMoon style={styles.icon} />}
+            <h3 style={styles.cardTitle}>Theme</h3>
+          </div>
+          <p style={styles.cardDescription}>Switch between light and dark mode.</p>
+          <div style={styles.toggleContainer}>
+            <span>Light</span>
+            <label style={styles.switch}>
+              <input type="checkbox" onChange={toggleTheme} checked={theme === 'dark'} />
+              <span style={{...styles.slider, ...styles.round}}></span>
+            </label>
+            <span>Dark</span>
+          </div>
+        </div>
       </div>
       <div style={styles.actions}>
         <button onClick={handleSaveChanges} style={styles.saveButton}>Save Changes</button>
@@ -89,6 +107,22 @@ const styles = {
     fontWeight: 'bold',
     cursor: 'pointer',
   },
+  // --- Toggle Switch Styles ---
+  toggleContainer: { display: 'flex', alignItems: 'center', gap: '10px' },
+  switch: { position: 'relative', display: 'inline-block', width: '60px', height: '34px' },
+  'switch input': { opacity: 0, width: 0, height: 0 },
+  slider: {
+    position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#ccc', transition: '.4s',
+  },
+  'slider:before': {
+    position: 'absolute', content: '""', height: '26px', width: '26px',
+    left: '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s',
+  },
+  'input:checked + .slider': { backgroundColor: '#007bff' },
+  'input:checked + .slider:before': { transform: 'translateX(26px)' },
+  round: { borderRadius: '34px' },
+  'round:before': { borderRadius: '50%' },
 };
 
 export default SettingsPage;
