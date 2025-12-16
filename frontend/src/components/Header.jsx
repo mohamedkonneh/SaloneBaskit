@@ -1,251 +1,171 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaUserCircle, FaChevronDown, FaFilter } from 'react-icons/fa';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+// You can also import your cart context to display a cart count
+// import { useCart } from '../context/CartContext';
 
-const searchSuggestions = [
-  "products...",
-  "new arrivals...",
-  "special offers...",
-  "flash deals...",
-  "deals of the day...",
-];
+// --- SVG Icons for a clean, dependency-free implementation ---
+const CartIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+);
 
-const Header = ({ categories = [], searchTerm, onSearchChange, selectedCategory, onCategoryChange, onFilterClick }) => {
-  const [placeholder, setPlaceholder] = useState('');
-  const [suggestionIndex, setSuggestionIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { userInfo } = useAuth();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const isMobile = useMediaQuery('(max-width: 767px)');
+const UserIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+);
 
-  useEffect(() => {
-    const currentSuggestion = `Search for ${searchSuggestions[suggestionIndex]}`;
-    let timeout;
+const HamburgerIcon = ({ onClick }) => (
+  <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'pointer' }}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+);
 
-    if (isDeleting) {
-      // Handle deleting
-      if (placeholder.length > 0) {
-        timeout = setTimeout(() => {
-          setPlaceholder(prev => prev.slice(0, -1));
-        }, 80); // Faster deleting speed
-      } else {
-        setIsDeleting(false);
-        setSuggestionIndex((prevIndex) => (prevIndex + 1) % searchSuggestions.length);
-      }
-    } else {
-      // Handle typing
-      if (placeholder.length < currentSuggestion.length) {
-        timeout = setTimeout(() => {
-          setPlaceholder(currentSuggestion.substring(0, placeholder.length + 1));
-        }, 120); // Typing speed
-      } else {
-        timeout = setTimeout(() => setIsDeleting(true), 2500); // Wait before deleting
-      }
-    }
+const Header = () => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Example: const { cart } = useCart();
+  // const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
-    return () => clearTimeout(timeout);
-  }, [placeholder, isDeleting, suggestionIndex]);
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Categories', path: '/categories' },
+    { name: 'About', path: '/about' },
+    { name: 'Contact', path: '/contact' },
+  ];
 
-  // Effect to handle clicks outside the dropdown to close it
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownRef]);
-
-  // Handler for selecting a category from the custom dropdown
-  const handleCategorySelect = (categoryName) => {
-    onCategoryChange({ target: { value: categoryName } }); // Mimic event object for parent handler
-    setIsDropdownOpen(false);
-  };
+  const renderNavLinks = (isMobileLayout = false) => (
+    <div style={styles.navLinks(isMobileLayout)}>
+      {navLinks.map(link => (
+        <Link to={link.path} key={link.name} style={styles.navLink(isMobileLayout)} onClick={() => setMobileMenuOpen(false)}>
+          {link.name}
+        </Link>
+      ))}
+    </div>
+  );
 
   return (
-    <header style={styles.header(isMobile)}>
-      <div style={styles.container(isMobile)}>
-        {/* Top row for logo and account icon */}
-        <div style={styles.topRow}>
-          <h1 style={styles.logo(isMobile)}>SaloneBaskit</h1>
-          {userInfo && (
-            <Link to="/account" style={styles.accountLink}>
-              <FaUserCircle size={isMobile ? 26 : 30} />
-            </Link>
-          )}
-        </div>
+    <>
+      <header style={styles.header}>
+        <nav style={styles.nav}>
+          <Link to="/" style={styles.logo}>
+            SaloneBaskit
+          </Link>
 
-        {/* Search bar container */}
-        <div style={styles.searchContainer(isMobile)}>
-          {/* Category select is only shown on desktop */}
-          {!isMobile && (
-            <div style={styles.categoryDropdownContainer} ref={dropdownRef}>
-              <button style={styles.categoryButton} onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-                <span style={styles.categoryButtonText}>{selectedCategory === 'all' ? 'All Categories' : selectedCategory}</span>
-                <FaChevronDown style={{...styles.chevronIcon, transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'}} />
-              </button>
-              {isDropdownOpen && (
-                <div style={styles.dropdownMenu}>
-                  <div style={styles.dropdownItem} onClick={() => handleCategorySelect('all')}>
-                    All Categories
-                  </div>
-                  {categories.map(cat => (
-                    <div key={cat.id} style={styles.dropdownItem} onClick={() => handleCategorySelect(cat.name)}>
-                      {cat.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+          {isMobile ? (
+            <HamburgerIcon onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} />
+          ) : (
+            <>
+              {renderNavLinks()}
+              <div style={styles.actionIcons}>
+                <Link to="/profile" style={styles.iconLink}><UserIcon /></Link>
+                <Link to="/cart" style={styles.iconLink}>
+                  <CartIcon />
+                  {/* Optional: Cart count */}
+                  {/* {cartItemCount > 0 && <span style={styles.cartCount}>{cartItemCount}</span>} */}
+                </Link>
+              </div>
+            </>
+          )}
+        </nav>
+      </header>
+      {isMobile && isMobileMenuOpen && (
+        <div style={styles.mobileMenu}>
+          {renderNavLinks(true)}
+           <div style={styles.mobileActionIcons}>
+              <Link to="/profile" style={styles.iconLink} onClick={() => setMobileMenuOpen(false)}><UserIcon /> Profile</Link>
+              <Link to="/cart" style={styles.iconLink} onClick={() => setMobileMenuOpen(false)}><CartIcon /> Cart</Link>
             </div>
-          )}
-          <input type="text" placeholder={placeholder} style={styles.searchInput} value={searchTerm} onChange={onSearchChange} />
-          {isMobile && (
-            <button style={styles.filterButton} onClick={onFilterClick}>
-              <FaFilter />
-            </button>
-          )}
-          <button style={styles.searchButton(isMobile)}>
-            <FaSearch />
-          </button>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 };
 
 const styles = {
-  header: (isMobile) => ({
-    backgroundColor: '#FF7043', // Modern orange background
-    padding: isMobile ? '8px 15px' : '12px 20px', // Reduced padding
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  header: {
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
     position: 'sticky',
     top: 0,
-    zIndex: 1050,
-  }),
-  container: (isMobile) => ({
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    alignItems: isMobile ? 'stretch' : 'center',
-    maxWidth: '1400px',
-    margin: '0 auto',
-    gap: isMobile ? '10px' : '0',
-  }),
-  topRow: {
+    zIndex: 1000,
+    width: '100%',
+  },
+  nav: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: '0 20px',
+    height: '70px',
+    maxWidth: '1200px',
+    margin: '0 auto',
   },
-  logo: (isMobile) => ({
-    fontSize: isMobile ? '1.5rem' : '1.8rem',
+  logo: {
+    fontSize: '1.5rem',
     fontWeight: 'bold',
-    color: 'white', // Changed for contrast
-    margin: 0,
-    flexShrink: 0,
-  }),
-  searchContainer: (isMobile) => ({
-    display: 'flex',
-    alignItems: 'center',
-    borderRadius: '50px',
-    overflow: 'hidden',
-    flexGrow: 1,
-    marginLeft: isMobile ? 0 : '25px',
-    width: isMobile ? '100%' : 'auto',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Lighter background for contrast
-    border: '1px solid transparent', // For focus effect
-    transition: 'border-color 0.2s',
-  }),
-  categoryDropdownContainer: {
-    position: 'relative',
+    color: '#004085',
+    textDecoration: 'none',
   },
-  categoryButton: {
+  navLinks: (isMobile) => ({
     display: 'flex',
-    alignItems: 'center',
-    padding: '10px 20px', // Reduced padding
-    border: 'none',
-    borderRight: '1px solid #d1d5db',
-    backgroundColor: 'transparent',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'center' : 'center',
+    gap: isMobile ? '20px' : '30px',
+  }),
+  navLink: (isMobile) => ({
+    textDecoration: 'none',
+    color: '#333',
     fontWeight: '500',
-    cursor: 'pointer',
-    outline: 'none',
-    color: '#495057',
-  },
-  categoryButtonText: {
-    marginRight: '8px',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    maxWidth: '120px',
-  },
-  chevronIcon: {
-    transition: 'transform 0.2s ease-in-out',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: '110%',
-    left: 0,
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-    zIndex: 10,
-    width: '200px',
-    maxHeight: '300px',
-    overflowY: 'auto',
-    border: '1px solid #eee',
-  },
-  dropdownItem: {
-    padding: '12px 15px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    transition: 'background-color 0.2s',
-    '&:hover': { // Note: This is pseudo-code for hover, React handles this differently
-      backgroundColor: '#f0f2f5',
-    }
-  },
-  searchInput: {
-    flexGrow: 1,
-    padding: '10px 20px', // Reduced padding
-    border: 'none',
-    outline: 'none',
-    fontSize: '1rem',
-    backgroundColor: 'transparent',
-  },
-  filterButton: {
-    padding: '0 15px',
-    height: '100%',
-    border: 'none',
-    borderLeft: '1px solid #d1d5db',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#495057',
-    fontSize: '1rem',
-  },
-  searchButton: (isMobile) => ({
-    width: isMobile ? '40px' : '38px', // Reduced size
-    height: isMobile ? '40px' : '38px', // Reduced size
-    borderRadius: '50%',
-    border: 'none',
-    backgroundColor: 'transparent', // Made transparent
-    color: 'white',
-    cursor: 'pointer',
-    display: 'flex',
-    flexShrink: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: isMobile ? '1.2rem' : '1rem',
+    transition: 'color 0.2s',
   }),
-  accountLink: {
-    marginLeft: '20px',
-    color: 'white', // Changed for contrast
+  actionIcons: {
     display: 'flex',
     alignItems: 'center',
+    gap: '20px',
   },
+  iconLink: {
+    color: '#333',
+    textDecoration: 'none',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  cartCount: {
+    position: 'absolute',
+    top: '-5px',
+    right: '-10px',
+    backgroundColor: '#dc3545',
+    color: 'white',
+    borderRadius: '50%',
+    width: '18px',
+    height: '18px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: '0.7rem',
+    fontWeight: 'bold',
+  },
+  mobileMenu: {
+    position: 'fixed',
+    top: '70px', // Position below the header
+    left: 0,
+    width: '100%',
+    height: 'calc(100vh - 70px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    backdropFilter: 'blur(5px)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '30px',
+    zIndex: 999,
+  },
+  mobileActionIcons: {
+    display: 'flex',
+    gap: '30px',
+    marginTop: '20px',
+    borderTop: '1px solid #eee',
+    paddingTop: '30px',
+  }
 };
 
 export default Header;
+ 
