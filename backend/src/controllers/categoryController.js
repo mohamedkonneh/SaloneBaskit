@@ -5,7 +5,9 @@ const db = require('../config/db');
 // @access  Public
 const getCategories = async (req, res) => {
   try {
-    const categories = await db.query('SELECT * FROM categories ORDER BY name ASC');
+    // Only fetch categories that have a non-empty image_url
+    const query = "SELECT * FROM categories WHERE image_url IS NOT NULL AND image_url != '' ORDER BY name ASC";
+    const categories = await db.query(query);
     res.json(categories.rows);
   } catch (error) {
     console.error(error.message);
