@@ -1,72 +1,75 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const CartContext = createContext();
 
-export const useCart = () => {
-  return useContext(CartContext);
-};
-
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const localData = localStorage.getItem('cart');
-      return localData ? JSON.parse(localData) : [];
-    } catch (error) {
-      console.error("Could not parse cart data from localStorage", error);
-      return [];
-    }
-  });
+  const [cartItems, setCartItems] = useState([]);
 
+  // Load cart from localStorage on initial render
+  useEffect(() => {
+    try {
+      const storedCart = localStorage.getItem('cart');
+      if (storedCart) {
+        setCartItems(JSON.parse(storedCart));
+      }
+    } catch (error) {
+      console.error("Failed to parse cart from localStorage", error);
+      localStorage.removeItem('cart');
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (itemToAdd, quantity = 1) => {
-    setCartItems(prevItems => {
-      // Create a unique ID for the cart item based on product and options
-      const cartItemId = `${itemToAdd.id}-${itemToAdd.color || 'default'}-${itemToAdd.size || 'default'}`;
-      const existingItem = prevItems.find(item => item.cartItemId === cartItemId);
-      const quantityToAdd = itemToAdd.quantity || quantity;
+  const addToCart = (product, quantity) => {
+    const existingItem = cartItems.find((item) => item.id === product.id);
 
-      if (existingItem) {
-        // If item with same options exists, update its quantity
-        return prevItems.map(item =>
-          item.cartItemId === cartItemId
-            ? { ...item, quantity: (item.quantity || 0) + quantityToAdd } // Ensure existing quantity is a number before adding
+    if (existingItem) {
+      // If item exists, update its quantity
+      setCartItems(
+        cartItems.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
             : item
-        );
-      } else {
-        // Otherwise, add new item to cart
-        const newItem = { 
-          ...itemToAdd, 
-          quantity: quantityToAdd, 
-          cartItemId,
-          price: itemToAdd.discounted_price || itemToAdd.price // Explicitly set the price for the cart
-        };
-        return [...prevItems, newItem];
-      }
-    });
+        )
+      );
+    } else {
+      // If item is new, add it to the cart
+      setCartItems([...cartItems, { ...product, quantity }]);
+    }
+    toast.success(`${product.name} added to cart!`);
   };
 
-  const removeFromCart = (cartItemId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.cartItemId !== cartItemId));
+  const removeFromCart = (productId) => {
+    setCartItems(cartItems.filter((item) => item.id !== productId));
+    toast.info("Item removed from cart.");
   };
 
-  const updateQuantity = (cartItemId, newQuantity) => {
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.cartItemId === cartItemId
-          ? { ...item, quantity: Math.max(0, parseInt(newQuantity) || 0) } // Ensure newQuantity is a valid number
-          : item
-      ).filter(item => item.quantity > 0) // Remove if quantity becomes 0
-    );
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(productId);
+    } else {
+      setCartItems(
+        cartItems.map((item) =>
+          item.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  // Memoized values to provide to consumers
+  const value = {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
   };
-
-  const value = { cartItems, addToCart, removeFromCart, updateQuantity, clearCart };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
+
+export const useCart = () => useContext(CartContext);
