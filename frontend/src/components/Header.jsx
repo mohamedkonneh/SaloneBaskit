@@ -123,9 +123,9 @@ const Header = () => {
           ) : (
             <>
               <Link to="/" style={styles.logo}>SaloneBaskit</Link>
+              <div style={styles.desktopNav}>{renderNavLinks()}</div>
               <div style={{flex: 1, maxWidth: '600px'}}><SearchBar /></div>
               <div style={styles.actionIcons}>
-                <HamburgerIcon onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} />
                 <Link to="/profile" style={styles.iconLink}><UserIcon /></Link>
                 <Link to="/cart" style={styles.iconLink}>
                   <CartIcon />
@@ -173,6 +173,11 @@ const styles = {
     fontWeight: 'bold',
     color: '#004085',
     textDecoration: 'none',
+  },
+  desktopNav: {
+    display: 'flex',
+    gap: '30px',
+    margin: '0 40px', // Add space around the nav links
   },
   navLinks: (isMobile) => ({
     display: 'flex',
