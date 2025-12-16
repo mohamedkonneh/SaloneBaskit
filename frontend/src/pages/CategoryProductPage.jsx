@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const CategoryProductPage = () => {
   const { categoryName } = useParams();
@@ -10,7 +11,7 @@ const CategoryProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -30,12 +31,6 @@ const CategoryProductPage = () => {
     };
     fetchProducts();
   }, [categoryName]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   return (
     <div>
@@ -65,7 +60,7 @@ const styles = {
   },
   productGrid: (isMobile) => ({
     display: 'grid',
-    gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(250px, 1fr))',
+    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(250px, 1fr))',
     gap: isMobile ? '10px' : '25px',
   }),
 };
