@@ -27,6 +27,13 @@ const Header = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [placeholder, setPlaceholder] = useState('Search for products...');
+
+  const placeholders = [
+    'Search for products...',
+    'Search for categories...',
+    'Search for offers...',
+  ];
   // Example: const { cart } = useCart();
   // const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
@@ -49,6 +56,20 @@ const Header = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (isMobile) {
+      let placeholderIndex = 0;
+      const intervalId = setInterval(() => {
+        placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+        setPlaceholder(placeholders[placeholderIndex]);
+      }, 3000); // Change placeholder every 3 seconds
+
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    } else {
+      setPlaceholder('Search for products...'); // Reset to default on desktop
+    }
+  }, [isMobile]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     // Implement search logic, e.g., navigate to a search results page
@@ -66,15 +87,17 @@ const Header = () => {
   );
 
   const SearchBar = () => (
-    <form style={styles.searchContainer} onSubmit={handleSearch}>
-      <select style={styles.categorySelect}>
-        <option value="all">All</option>
-        {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
-      </select>
+    <form style={styles.searchContainer(isMobile)} onSubmit={handleSearch}>
+      {!isMobile && (
+        <select style={styles.categorySelect}>
+          <option value="all">All</option>
+          {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+        </select>
+      )}
       <input 
         type="text" 
-        placeholder="Search for products..." 
-        style={styles.searchInput}
+        placeholder={placeholder} 
+        style={styles.searchInput(isMobile)}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
@@ -234,14 +257,14 @@ const styles = {
     marginTop: '8px', // Space between search bar and logo
   },
   // --- Search Bar Styles ---
-  searchContainer: {
+  searchContainer: (isMobile) => ({
     display: 'flex',
     width: '100%',
     border: '1px solid #ccc',
     borderRadius: '25px',
     overflow: 'hidden',
     backgroundColor: '#f8f9fa',
-  },
+  }),
   categorySelect: {
     border: 'none',
     backgroundColor: '#eee',
@@ -249,7 +272,7 @@ const styles = {
     color: '#555',
     outline: 'none',
   },
-  searchInput: {
+  searchInput: (isMobile) => ({
     flex: 1,
     minWidth: 0, // Crucial fix: Allows the input to shrink below its default min-width
     border: 'none',
@@ -257,7 +280,8 @@ const styles = {
     fontSize: '0.9rem',
     outline: 'none',
     backgroundColor: 'transparent',
-  },
+    paddingLeft: isMobile ? '15px' : '8px', // Add more left padding on mobile when dropdown is hidden
+  }),
   searchButton: {
     border: 'none',
     backgroundColor: '#004085',
