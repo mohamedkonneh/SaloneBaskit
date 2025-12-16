@@ -34,16 +34,16 @@ const getSupplierById = async (req, res) => {
 // @route   POST /api/suppliers
 // @access  Private/Admin
 const createSupplier = async (req, res) => {
-  const { name, contact_person, email, phone, address, user_id } = req.body;
+  const { name, contact_person, email, phone, address } = req.body;
 
-  if (!name || !email || !user_id) {
-    return res.status(400).json({ message: 'Supplier name, email, and user ID are required.' });
+  if (!name || !email) {
+    return res.status(400).json({ message: 'Supplier name and email are required.' });
   }
 
   try {
     const { rows } = await db.query(
-      'INSERT INTO suppliers (name, contact_person, email, phone, address, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, contact_person, email, phone, address, user_id]
+      'INSERT INTO suppliers (name, contact_person, email, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, contact_person, email, phone, address]
     );
     res.status(201).json(rows[0]);
   } catch (error) {

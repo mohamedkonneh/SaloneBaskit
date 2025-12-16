@@ -87,8 +87,7 @@ const AdminSuppliersPage = () => {
         const { data: updatedSupplier } = await api.put(`/suppliers/${editingSupplier.id}`, supplierData);
         setSuppliers(suppliers.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
       } else {
-        // Add the user_id to the payload for creation
-        const { data: newSupplier } = await api.post('/suppliers', { ...supplierData, user_id: userInfo.id });
+        const { data: newSupplier } = await api.post('/suppliers', supplierData);
         setSuppliers([newSupplier, ...suppliers]); // Add to the top of the list
       }
       cancelEdit(); // Clear the form
