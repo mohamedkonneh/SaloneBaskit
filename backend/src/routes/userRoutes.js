@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, getUsers, getUserProfile, updateUserProfile, deleteUser, getUserMailbox } = require('../controllers/userController');
+const { registerUser, loginUser, getUsers, getUserProfile, updateUserProfile, deleteUser, getUserMailbox, uploadProfilePhoto } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { validateRegistration, validateLogin, validateProfileUpdate } = require('../middleware/validationMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 // @route   POST /api/users/register
 // @desc    Register a new user
 router.post('/register', validateRegistration, registerUser);
@@ -27,5 +28,9 @@ router.delete('/:id', protect, admin, deleteUser);
 
 // Route for user to get their messages
 router.get('/mailbox', protect, getUserMailbox);
+router.get('/profile', protect, getUserProfile);
+
+// @route   POST /api/users/profile/photo
+router.post('/profile/photo', protect, upload.single('photo'), uploadProfilePhoto);
 
 module.exports = router;
