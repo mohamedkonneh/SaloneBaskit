@@ -1,61 +1,41 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axiosConfig';
 
-// Create the context that components will consume
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [userInfo, setUserInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
-  // On initial app load, try to load user from localStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('userInfo');
-      if (stored) {
-        setUserInfo(JSON.parse(stored));
-      }
-    } catch (err) {
-      // If parsing fails, clear the broken item
-      localStorage.removeItem('userInfo');
-      setUserInfo(null);
-    } finally {
-      setLoading(false);
+    // Check for a token in localStorage when the app loads
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Here you would typically decode the token to get user info
+      // For simplicity, we'll just set a placeholder user object
+      // In a real app: const decoded = jwt_decode(token); setUser(decoded);
+      setUser({ token }); 
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      // The 'data' object itself is the user info payload from the backend.
-      const { data } = await api.post('/users/login', { email, password });
-
-      localStorage.setItem('userInfo', JSON.stringify(data));
-      setUserInfo(data);
-
-      return data;
-    } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        'An unexpected error occurred. Please try again.';
-      throw new Error(message);
-    }
+  const login = (userData) => {
+    localStorage.setItem('token', userData.token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
+    setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('userInfo');
-    setUserInfo(null);
+    // This is the crucial part that was likely missing
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
+    setUser(null);
   };
 
-  const updateUserInfo = (newInfo) => {
-    localStorage.setItem('userInfo', JSON.stringify(newInfo));
-    setUserInfo(newInfo);
-  };
+  const value = { user, login, logout };
 
-  return (
-    <AuthContext.Provider
-      value={{ userInfo, loading, login, logout, updateUserInfo }} // Ensure updateUserInfo is exported
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  return useContext(AuthContext);
 };
