@@ -7,21 +7,27 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const CategoryProductPage = () => {
   const { categoryName } = useParams();
+  const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [activeCategory, setActiveCategory] = useState(categoryName || 'All');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const productsRes = await api.get('/products');
-
-        const filtered = productsRes.data.filter(p => p.category === categoryName);
-        setProducts(filtered);
-
+        // Fetch all data concurrently for speed
+        const [productsRes, categoriesRes] = await Promise.all([
+          api.get('/products'),
+          api.get('/categories')
+        ]);
+        
+        setAllProducts(productsRes.data);
+        setCategories(categoriesRes.data);
       } catch (err) {
         setError('Failed to fetch data.');
         console.error(err);
@@ -29,25 +35,52 @@ const CategoryProductPage = () => {
         setLoading(false);
       }
     };
-    fetchProducts();
-  }, [categoryName]);
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Filter products whenever the active category or the full product list changes
+    if (activeCategory === 'All') {
+      setProducts(allProducts);
+    } else {
+      const filtered = allProducts.filter(p => p.category === activeCategory);
+      setProducts(filtered);
+    }
+  }, [activeCategory, allProducts]);
+
+  // If not mobile and no category is selected, render the main categories page instead.
+  if (!isMobile && !categoryName) {
+    return <CategoriesPage />;
+  }
 
   return (
-    <div>
+    <div style={styles.pageContainer(isMobile)}>
       <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
-      <h1 style={styles.title}>Shop: {categoryName}</h1>
-      {loading ? <p>Loading products...</p> : error ? <p style={{ color: 'red' }}>{error}</p> : (
-        products.length > 0 ? (
-        <div style={styles.productGrid(isMobile)}>
-          {products.map(product => (
-            <Link to={`/product/${product.id}`} key={product.id} style={{ textDecoration: 'none' }}>
-              <ProductCard product={product} onQuickView={setQuickViewProduct} />
-            </Link>
+      {isMobile && (
+        <aside style={styles.sidebar}>
+          <button onClick={() => setActiveCategory('All')} style={styles.categoryButton(activeCategory === 'All')}>All</button>
+          {categories.map(cat => (
+            <button key={cat.id} onClick={() => setActiveCategory(cat.name)} style={styles.categoryButton(activeCategory === cat.name)}>
+              {cat.name}
+            </button>
           ))}
-        </div>
-        ) : <p>No products found in this category.</p>
+        </aside>
       )}
-    </div>
+      <main style={styles.mainContent(isMobile)}>
+        <h1 style={styles.title}>Shop: {activeCategory}</h1>
+        {loading ? <p>Loading...</p> : error ? <p style={{ color: 'red' }}>{error}</p> : (
+          products.length > 0 ? (
+          <div style={styles.productGrid(isMobile)}>
+            {products.map(product => (
+              <Link to={`/product/${product.id}`} key={product.id} style={{ textDecoration: 'none' }}>
+                {/* Pass supplier name only when a specific category is active */}
+                <ProductCard product={product} onQuickView={setQuickViewProduct} showSupplier={activeCategory !== 'All'} />
+              </Link>
+            ))}
+          </div>
+          ) : <p>No products found in this category.</p>
+      )}
+      </main>
   );
 };
 const styles = {
