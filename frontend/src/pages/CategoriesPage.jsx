@@ -1,35 +1,71 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import api from '../api/axiosConfig';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
+// A placeholder for category images. You can replace this later.
+const PLACEHOLDER_IMAGE = 'https://placehold.co/300x300/e9ecef/6c757d?text=Category';
+
 const CategoriesPage = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const isMobile = useMediaQuery('(max-width: 768px)');
-  
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/categories');
+        setCategories(response.data);
+      } catch (err) {
+        setError('Failed to fetch categories. Please try again later.');
+        console.error('Fetch categories error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  if (loading) return <p>Loading categories...</p>;
+  if (error) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
+
   return (
-    <div style={styles.container(isMobile)}>
-      <h2 style={styles.title(isMobile)}>Welcome to our Categories</h2>
-      <p style={styles.text(isMobile)}>
-        {isMobile 
-          ? 'Please select a category to start browsing products.' 
-          : 'Please select a category from the left to start browsing products.'}
-      </p>
+    <div style={styles.container}>
+      <h1 style={styles.title}>All Categories</h1>
+      <div style={styles.grid(isMobile)}>
+        {categories.map((category) => (
+          <Link to={`/categories/${category.name}`} key={category.id} style={styles.cardLink}>
+            <div style={styles.card}>
+              <img src={category.image_url || PLACEHOLDER_IMAGE} alt={category.name} style={styles.image} />
+              <h3 style={styles.cardTitle}>{category.name}</h3>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };
 
 const styles = {
-  container: (isMobile) => ({
-    textAlign: 'center',
-    padding: isMobile ? '40px 20px' : '50px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    minHeight: '300px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
+  container: { padding: '20px' },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    marginBottom: '30px',
+    borderBottom: '2px solid #eee',
+    paddingBottom: '15px',
+  },
+  grid: (isMobile) => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '20px',
   }),
-  title: (isMobile) => ({ fontSize: isMobile ? '1.5rem' : '1.8rem', marginBottom: '15px', color: '#333' }),
-  text: (isMobile) => ({ fontSize: isMobile ? '0.9rem' : '1rem', color: '#6c757d', maxWidth: '400px', lineHeight: '1.5' }),
+  cardLink: { textDecoration: 'none', color: 'inherit' },
+  card: { border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', textAlign: 'center', transition: 'box-shadow 0.3s' },
+  image: { width: '100%', height: '150px', objectFit: 'cover', backgroundColor: '#f8f9fa' },
+  cardTitle: { fontSize: '1rem', padding: '15px 10px', margin: 0 },
 };
 
 export default CategoriesPage;
