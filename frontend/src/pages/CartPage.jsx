@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { getImageUrl } from './imageUrl';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { convertPrice } = useSettings();
-
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
   const cartTotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
@@ -19,11 +21,11 @@ const CartPage = () => {
       {cartItems.length === 0 ? (
         <p style={styles.text}>Your cart is currently empty. <Link to="/categories">Start shopping!</Link></p>
       ) : (
-        <div style={styles.cartLayout}>
+        <div style={styles.cartLayout(isMobile)}>
           <div style={styles.itemsList}>
             {cartItems.map(item => (
-              <div key={item.id} style={styles.item}>
-                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
+              <div key={item.id} style={styles.item(isMobile)}>
+                <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
                 <div style={styles.itemDetails}>
                   <h3 style={styles.itemName}>{item.name}</h3>
                   <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
@@ -66,11 +68,22 @@ const CartPage = () => {
 const styles = {
   container: { padding: '20px', maxWidth: '1200px', margin: '0 auto' },
   title: { fontSize: '2.2rem', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '15px' },
-  text: { fontSize: '1.1rem', lineHeight: '1.6' },
-  cartLayout: { display: 'flex', gap: '30px', flexDirection: 'row' },
+  text: { fontSize: '1.1rem', lineHeight: '1.6', textAlign: 'center' },
+  cartLayout: (isMobile) => ({ 
+    display: 'flex', 
+    gap: '30px', 
+    flexDirection: isMobile ? 'column' : 'row' 
+  }),
   itemsList: { flex: 2 },
-  item: { display: 'flex', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '20px' },
-  itemImage: { width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' },
+  item: (isMobile) => ({ 
+    display: 'flex', 
+    alignItems: 'center', 
+    marginBottom: '20px', 
+    borderBottom: '1px solid #eee', 
+    paddingBottom: '20px',
+    flexDirection: isMobile ? 'column' : 'row',
+  }),
+  itemImage: (isMobile) => ({ width: isMobile ? '100%' : '100px', height: isMobile ? 'auto' : '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: isMobile ? '15px' : '0' }),
   itemDetails: { flex: 1, marginLeft: '20px' },
   itemName: { fontSize: '1.1rem', margin: '0 0 10px 0' },
   itemPrice: { fontSize: '1rem', color: '#555', margin: 0 },
