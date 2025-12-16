@@ -9,42 +9,19 @@ import api from '../api/axiosConfig';
 
 // Placeholder components for different sections
 const ProfileInfo = () => {
-  const { userInfo, updateUserInfo } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (userInfo) {
-      setName(userInfo.name);
-      setEmail(userInfo.email);
-    }
-  }, [userInfo]);
-
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // Assumes an endpoint like PUT /api/users/profile
-      const { data } = await api.put('/users/profile', { name, email });
-      updateUserInfo(data); // Update context and localStorage
-      toast.success('Profile updated successfully!');
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update profile.';
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { userInfo } = useAuth();
 
   return (
     <div style={styles.contentPanel}>
       <h2>Profile Information</h2>
-      <form onSubmit={submitHandler}>
-        <div style={styles.formGroup}><label htmlFor="name">Name</label><input type="text" id="name" value={name} onChange={e => setName(e.target.value)} style={styles.input} /></div>
-        <div style={styles.formGroup}><label htmlFor="email">Email</label><input type="email" id="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} /></div>
-        <button type="submit" style={styles.saveButton} disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</button>
-      </form>
+      <div style={styles.formGroup}>
+        <label style={styles.infoLabel}>Name</label>
+        <p style={styles.infoText}>{userInfo?.name || 'N/A'}</p>
+      </div>
+      <div style={styles.formGroup}>
+        <label style={styles.infoLabel}>Email</label>
+        <p style={styles.infoText}>{userInfo?.email || 'N/A'}</p>
+      </div>
     </div>
   );
 };
@@ -234,6 +211,8 @@ const styles = {
   },
   // Form styles for ProfileInfo
   formGroup: { marginBottom: '1.5rem' },
+  infoLabel: { display: 'block', fontWeight: 'bold', color: '#6c757d', marginBottom: '5px' },
+  infoText: { fontSize: '1.1rem', margin: 0, padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px' },
   input: { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '1rem' },
   saveButton: { padding: '12px 25px', border: 'none', borderRadius: '8px', backgroundColor: '#28a745', color: 'white', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' },
 };

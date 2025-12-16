@@ -13,8 +13,8 @@ const FeaturedProductsCarousel = ({ products, title, onProductClick }) => {
     dots: true,
     infinite: products.length > 1,
     speed: 500,
-    slidesToShow: 4, // Show 4 columns on desktop
-    slidesToScroll: 4, // Scroll 4 at a time
+    slidesToShow: 3, // Show 4 columns on desktop
+    slidesToScroll: 3, // Scroll 4 at a time
     autoplay: true,
     autoplaySpeed: 3000, // Move every 3 seconds
     arrows: true, // Enable navigation arrows
