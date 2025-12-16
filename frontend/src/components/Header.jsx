@@ -245,14 +245,15 @@ const styles = {
   categorySelect: {
     border: 'none',
     backgroundColor: '#eee',
-    padding: '0 10px',
+    padding: '0 5px 0 10px', // Reduced padding for mobile
     color: '#555',
     outline: 'none',
   },
   searchInput: {
     flex: 1,
+    minWidth: 0, // Crucial fix: Allows the input to shrink below its default min-width
     border: 'none',
-    padding: '10px',
+    padding: '10px 8px', // Reduced padding for mobile
     fontSize: '0.9rem',
     outline: 'none',
     backgroundColor: 'transparent',
