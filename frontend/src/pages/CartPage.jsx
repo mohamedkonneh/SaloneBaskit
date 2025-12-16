@@ -63,18 +63,20 @@ const CartPage = () => {
             <div style={styles.itemsList}>
               {cartItems.map(item => (
                 <div key={item.id} style={styles.item(isMobile)}>
-                  <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage(isMobile)} />
+                  <img src={getImageUrl(item.image_urls[0])} alt={item.name} style={styles.itemImage} />
                   <div style={styles.itemDetails}>
-                    <h3 style={styles.itemName}>{item.name}</h3>
-                    <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
-                  </div>
-                  <div style={styles.itemActions}>
-                    <div style={styles.quantityStepper}>
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.stepperButton}>-</button>
-                      <span style={styles.quantityDisplay}>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.stepperButton}>+</button>
+                    <div style={styles.itemInfo}>
+                      <h3 style={styles.itemName}>{item.name}</h3>
+                      <p style={styles.itemPrice}>{convertPrice(item.price)}</p>
                     </div>
-                    <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
+                    <div style={styles.itemActions}>
+                      <div style={styles.quantityStepper}>
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={styles.stepperButton}>-</button>
+                        <span style={styles.quantityDisplay}>{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={styles.stepperButton}>+</button>
+                      </div>
+                      <button onClick={() => removeFromCart(item.id)} style={styles.removeButton}>Remove</button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -137,17 +139,24 @@ const styles = {
   itemsList: { flex: 2 },
   item: (isMobile) => ({ 
     display: 'flex',
-    alignItems: 'center', 
+    alignItems: 'flex-start', // Align items to the top
     marginBottom: '20px', 
     borderBottom: '1px solid #eee', 
     paddingBottom: '20px',
-    flexDirection: isMobile ? 'column' : 'row',
+    gap: '15px',
   }),
-  itemImage: (isMobile) => ({ width: isMobile ? '100%' : '100px', height: isMobile ? 'auto' : '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: isMobile ? '15px' : '0' }),
-  itemDetails: { flex: 1, marginLeft: '20px', width: '100%' },
+  itemImage: { 
+    width: '80px', // Smaller image
+    height: '80px', 
+    objectFit: 'cover', 
+    borderRadius: '8px',
+    flexShrink: 0,
+  },
+  itemDetails: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
+  itemInfo: { marginBottom: '15px' },
   itemName: { fontSize: '1.1rem', margin: '0 0 10px 0' },
   itemPrice: { fontSize: '1rem', color: '#555', margin: 0 },
-  itemActions: { display: 'flex', alignItems: 'center', gap: '10px' },
+  itemActions: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   removeButton: { border: 'none', background: 'transparent', color: '#dc3545', cursor: 'pointer' },
   quantityStepper: {
     display: 'flex',
