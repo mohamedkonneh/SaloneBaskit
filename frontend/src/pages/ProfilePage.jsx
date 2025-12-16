@@ -6,6 +6,7 @@ import { FaUser, FaCog, FaBoxOpen, FaInfoCircle, FaSignOutAlt } from 'react-icon
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import api from '../api/axiosConfig';
+import defaultAvatar from '/images/default-avatar.png'; // Import the image
 
 // Placeholder components for different sections
 const ProfileInfo = () => {
@@ -102,7 +103,7 @@ const ProfilePage = () => {
       <div style={styles.layout(isMobile)}>
         <aside style={styles.profileCard}>
           <label htmlFor="photo-upload" style={styles.photoContainer}>
-            <img src={photoPreview || (userInfo?.photoUrl ? `${api.defaults.baseURL}${userInfo.photoUrl}` : '/images/default-avatar.png')} alt="Profile" style={styles.profilePhoto} />
+            <img src={photoPreview || (userInfo?.photoUrl ? `${api.defaults.baseURL}${userInfo.photoUrl}` : defaultAvatar)} alt="Profile" style={styles.profilePhoto} />
             <div style={styles.photoOverlay}>
               {isUploading ? '...' : 'Edit'}
             </div>
