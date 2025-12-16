@@ -253,7 +253,7 @@ const styles = {
     fontWeight: 'bold',
     color: '#004085',
     textDecoration: 'none',
-    textAlign: 'center',
+    textAlign: 'left',
     marginTop: '8px', // Space between search bar and logo
   },
   // --- Search Bar Styles ---
