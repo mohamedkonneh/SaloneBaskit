@@ -6,7 +6,7 @@ import { FaUser, FaCog, FaBoxOpen, FaInfoCircle, FaSignOutAlt } from 'react-icon
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import api from '../api/axiosConfig';
-import defaultAvatar from '/images/default-avatar.png'; // Import the image
+import defaultAvatar from '../assets/default-avatar.png'; // Import the image from the new location
 
 // Placeholder components for different sections
 const ProfileInfo = () => {
