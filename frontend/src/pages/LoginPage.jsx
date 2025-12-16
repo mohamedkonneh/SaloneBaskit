@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Correct import path
-import api from '../api/axiosConfig'; // Import api instance
 import { toast } from 'react-toastify'; // Import toast for notifications
 
 const LoginPage = () => {
@@ -15,22 +14,17 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // 1. Make the API call directly from the login page
-      const res = await api.post('/users/login', { email, password });
-      const userInfo = res.data;
-
-      // 2. On success, pass the user data to the context's login function
-      login(userInfo);
+      // The login function from context now handles the API call
+      const userInfo = await login(email, password);
       toast.success('Login successful! Welcome back.');
 
-      // 3. Conditionally redirect
+      // Conditionally redirect after successful login
       if (userInfo && userInfo.isAdmin) {
         navigate('/admin'); // Redirect admins to the dashboard
       } else {
         navigate('/profile'); // Redirect regular users to their profile
       }
     } catch (err) {
-      // 4. On failure, show a toast notification
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
       toast.error(errorMessage);
       console.error('Login error:', err.response || err);

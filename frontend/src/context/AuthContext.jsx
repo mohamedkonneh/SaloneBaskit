@@ -5,9 +5,10 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // To handle initial auth check
 
   useEffect(() => {
-    // Check for a token in localStorage when the app loads
+    // Check for user data in localStorage when the app loads
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -19,22 +20,27 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
       }
     }
+    setLoading(false); // Finished checking auth state
   }, []);
 
-  const login = (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData)); // Store the entire user object
+  const login = async (email, password) => {
+    // The login function now handles the API call itself
+    const res = await api.post('/users/login', { email, password });
+    const userData = res.data;
+
+    localStorage.setItem('user', JSON.stringify(userData));
     api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
     setUser(userData);
+    return userData; // Return user data for conditional redirects
   };
 
   const logout = () => {
-    // This is the crucial part that was likely missing
-    localStorage.removeItem('user'); // Remove the user object
+    localStorage.removeItem('user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
-  const value = { user, login, logout };
+  const value = { user, login, logout, loading };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
