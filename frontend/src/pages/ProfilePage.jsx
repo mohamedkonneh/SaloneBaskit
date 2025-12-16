@@ -98,7 +98,7 @@ const ProfilePage = () => {
       <div style={styles.layout(isMobile)}>
         <aside style={styles.profileCard}>
           <label htmlFor="photo-upload" style={styles.photoContainer}>
-            <img src={photoPreview || userInfo?.photoUrl || `https://i.pravatar.cc/150?u=${userInfo?.email}`} alt="Profile" style={styles.profilePhoto} />
+            <img src={photoPreview || userInfo?.photoUrl || '/images/default-avatar.png'} alt="Profile" style={styles.profilePhoto} />
             <div style={styles.photoOverlay}>Edit</div>
           </label>
           <input id="photo-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
