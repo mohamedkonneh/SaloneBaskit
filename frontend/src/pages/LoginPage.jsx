@@ -1,33 +1,36 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../api/axiosConfig';
-import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext'; // Correct import path
+import api from '../api/axiosConfig'; // Import api instance
+import { toast } from 'react-toastify'; // Import toast for notifications
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const { email, password } = formData;
-
-  const onChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      // 1. Make the API call directly from the login page
       const res = await api.post('/users/login', { email, password });
-      login(res.data); // res.data should contain user info and token
+      const userInfo = res.data;
+
+      // 2. On success, pass the user data to the context's login function
+      login(userInfo);
       toast.success('Login successful! Welcome back.');
-      navigate('/profile'); // Redirect to profile page on successful login
+
+      // 3. Conditionally redirect
+      if (userInfo && userInfo.isAdmin) {
+        navigate('/admin'); // Redirect admins to the dashboard
+      } else {
+        navigate('/profile'); // Redirect regular users to their profile
+      }
     } catch (err) {
-      // This is the crucial error handling part
+      // 4. On failure, show a toast notification
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
       toast.error(errorMessage);
       console.error('Login error:', err.response || err);
@@ -38,85 +41,38 @@ const LoginPage = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.formWrapper}>
-        <h1 style={styles.title}>Sign In</h1>
-        <p style={styles.subtitle}>Access your SaloneBaskit account</p>
-        <form onSubmit={onSubmit}>
-          <div style={styles.inputGroup}>
-            <label htmlFor="email" style={styles.label}>Email Address</label>
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={onChange}
-              required
-              style={styles.input}
-            />
+      <div style={styles.content}>
+        <h1 style={styles.title}>SaloneBaskit</h1>
+        <p style={styles.subtitle}>Welcome back! Please log in to your account.</p>
+
+        <form onSubmit={onSubmit} noValidate>
+          <div style={styles.formGroup}>
+            <input type="email" id="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
-          <div style={styles.inputGroup}>
-            <label htmlFor="password" style={styles.label}>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={onChange}
-              required
-              style={styles.input}
-            />
+          <div style={styles.formGroup}>
+            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} disabled={loading} required />
           </div>
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
+          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Logging In...' : 'Log In'}</button>
         </form>
-        <p style={styles.footerText}>
-          Don't have an account? <Link to="/register" style={styles.link}>Sign Up</Link>
+        <p style={styles.redirect}>
+          New to SaloneBaskit? <Link to="/register" style={styles.link}>Create an account</Link>
         </p>
       </div>
     </div>
   );
 };
 
+// Using similar styles as RegisterPage for consistency
 const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '40px 20px',
-    backgroundColor: '#f4f7f6',
-  },
-  formWrapper: {
-    width: '100%',
-    maxWidth: '400px',
-    padding: '40px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-  },
-  title: { fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '10px' },
-  subtitle: { textAlign: 'center', color: '#666', marginBottom: '30px' },
-  inputGroup: { marginBottom: '20px' },
-  label: { display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' },
-  input: {
-    width: '100%',
-    padding: '12px',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    fontSize: '1rem',
-  },
-  button: {
-    width: '100%',
-    padding: '15px',
-    border: 'none',
-    borderRadius: '4px',
-    backgroundColor: '#004085',
-    color: 'white',
-    fontSize: '1rem',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-  },
-  footerText: { textAlign: 'center', marginTop: '20px', color: '#666' },
-  link: { color: '#004085', textDecoration: 'none', fontWeight: 'bold' },
+  container: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f2f5', fontFamily: 'system-ui, sans-serif', padding: '20px' },
+  content: { width: '100%', maxWidth: '400px', textAlign: 'center' },
+  title: { fontSize: '3rem', fontWeight: 'bold', color: '#007bff', marginBottom: '1rem' },
+  subtitle: { fontSize: '1.1rem', color: '#666', marginBottom: '2rem' },
+  formGroup: { marginBottom: '1.5rem' },
+  input: { width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', fontSize: '1rem', backgroundColor: '#fff' },
+  button: { width: '100%', padding: '1rem', border: 'none', borderRadius: '8px', backgroundColor: '#007bff', color: 'white', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'background-color 0.3s' },
+  redirect: { textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' },
+  link: { color: '#007bff', textDecoration: 'none', fontWeight: 'bold' },
 };
 
 export default LoginPage;
