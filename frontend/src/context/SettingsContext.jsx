@@ -1,34 +1,44 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const SettingsContext = createContext();
 
-export const useSettings = () => useContext(SettingsContext);
+// Exchange rates against a base currency (e.g., USD)
+const exchangeRates = {
+  USD: 1,
+  SLE: 25, // Example rate: 1 USD = 25 SLE (new Leone)
+  EUR: 0.92,
+  GBP: 0.79,
+};
+
+const currencySymbols = {
+  USD: '$',
+  SLE: 'Le',
+  EUR: '€',
+  GBP: '£',
+};
 
 export const SettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState(() => {
-    try {
-      const savedSettings = localStorage.getItem('appSettings');
-      // Default settings if nothing is saved
-      return savedSettings ? JSON.parse(savedSettings) : { language: 'en', currency: 'USD' };
-    } catch (error) {
-      console.error("Failed to parse settings from localStorage", error);
-      return { language: 'en', currency: 'USD' };
-    }
+  const [settings, setSettings] = useState({
+    language: 'en',
+    currency: 'SLE', // Default to Sierra Leonean Leone
   });
 
-  useEffect(() => {
-    // Save settings to localStorage whenever they change
-    localStorage.setItem('appSettings', JSON.stringify(settings));
-  }, [settings]);
+  const convertPrice = (priceInBase) => {
+    const rate = exchangeRates[settings.currency] || 1;
+    const symbol = currencySymbols[settings.currency] || '$';
+    const converted = priceInBase * rate;
 
-  const value = {
-    settings,
-    setSettings, // Provide the setter function to update settings
+    // Format SLE as an integer with the symbol first
+    if (settings.currency === 'SLE') {
+      return `${symbol}${Math.round(converted).toLocaleString()}`;
+    }
+
+    return `${symbol}${converted.toFixed(2)}`;
   };
 
-  return (
-    <SettingsContext.Provider value={value}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  const value = { settings, setSettings, convertPrice };
+
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
+
+export const useSettings = () => useContext(SettingsContext);
