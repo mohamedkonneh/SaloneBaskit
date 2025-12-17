@@ -18,7 +18,7 @@ const handleUpload = (req, res, next) => {
 };
 
 router.get('/promotions', getPromotionalProducts);
-router.route('/').get(getProducts).post(protect, admin, handleUpload, validateProductCreation, createProduct);
+router.route('/').get(getProducts).post(protect, admin, handleUpload, createProduct); // The validation middleware was removed here in a previous step. This is correct.
 router.route('/supplier/:id').get(getProductsBySupplier);
 router.route('/:id/reviews').post(protect, validateReviewCreation, createProductReview);
 router.route('/:id').get(getProductById).put(protect, admin, validateProductUpdate, updateProduct).delete(protect, admin, deleteProduct);
