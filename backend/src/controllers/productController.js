@@ -87,18 +87,34 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    // When using multipart/form-data, all body values are strings. We must parse them.
+    const { name, description, brand, category, estimated_delivery, colors, sizes } = req.body;
+    const price = parseFloat(req.body.price);
+    const count_in_stock = parseInt(req.body.count_in_stock, 10);
+    const supplier_id = parseInt(req.body.supplier_id, 10);
+    const discounted_price = req.body.discounted_price ? parseFloat(req.body.discounted_price) : null;
+
+    // Convert string 'true'/'false' to boolean
+    const is_deal_of_the_day = req.body.is_deal_of_the_day === 'true';
+    const is_flash_sale = req.body.is_flash_sale === 'true';
+    const is_new_arrival = req.body.is_new_arrival === 'true';
+    const has_free_delivery = req.body.has_free_delivery === 'true';
+    const is_highlighted = req.body.is_highlighted === 'true';
  
     // Use the uploaded file's URL, or a default placeholder if no file is uploaded.
     const finalImageUrls = req.file
       ? [`${process.env.BACKEND_URL}/uploads/${req.file.filename}`]
       : [`${process.env.BACKEND_URL}/uploads/default-product-image.png`];
+
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls]);
+    const values = [
+      name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls
+    ];
+    const newProduct = await db.query(newProductQuery, values);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
