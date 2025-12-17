@@ -50,18 +50,25 @@ const getProductsBySupplier = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
-
+ 
+    // The 'image_urls' column in your DB expects a text array, so we'll format it as such.
+    // Use the uploaded file's URL, or a default placeholder if no file is uploaded.
+    const finalImageUrls = req.file
+      ? [`/uploads/${req.file.filename}`]
+      : ['/uploads/default-product-image.png']; // Ensure you have a default image at this path
+ 
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
-
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls]);
+ 
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
     console.error(error.message);
-    res.status(500).send('Server Error');
+    // Use the centralized error handler for a consistent JSON response
+    res.status(500).json({ message: 'Failed to save product.' });
   }
 };
 
