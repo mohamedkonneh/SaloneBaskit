@@ -94,6 +94,7 @@ const getUserProfile = async (req, res) => {
     name: req.user.username, // Return username as 'name'
     email: req.user.email,
     isAdmin: req.user.is_admin,
+    photoUrl: req.user.photo_url, // Add the photoUrl to the response
   });
 };
 
