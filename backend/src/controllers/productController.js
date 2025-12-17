@@ -5,25 +5,30 @@ const db = require('../config/db');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    // Implement pagination
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 items per page
-    const offset = (page - 1) * limit;
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
 
-    // Query to get the total count of products
-    const totalProductsQuery = await db.query('SELECT COUNT(*) FROM products');
-    const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
+    // If pagination parameters are provided, return the paginated object
+    if (page && limit) {
+      const offset = (page - 1) * limit;
 
-    // Query to get the paginated products
-    const productsQuery = 'SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
-    const products = await db.query(productsQuery, [limit, offset]);
+      const totalProductsQuery = await db.query('SELECT COUNT(*) FROM products');
+      const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
 
-    res.json({
-      products: products.rows,
-      page,
-      pages: Math.ceil(totalProducts / limit),
-      total: totalProducts,
-    });
+      const productsQuery = 'SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
+      const products = await db.query(productsQuery, [limit, offset]);
+
+      return res.json({
+        products: products.rows,
+        page,
+        pages: Math.ceil(totalProducts / limit),
+        total: totalProducts,
+      });
+    } else {
+      // Otherwise, return all products in a simple array for backward compatibility
+      const products = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+      res.json(products.rows);
+    }
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Failed to fetch products.' });
