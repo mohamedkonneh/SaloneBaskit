@@ -107,9 +107,9 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required fields: name, description, brand, category, price, stock, and supplier.' });
     }
  
-    // Use the uploaded file's URL, or a default placeholder if no file is uploaded.
+    // Convert the uploaded file to a Base64 data URI.
     const image_urls = req.file
-      ? [`${process.env.BACKEND_URL}/uploads/${req.file.filename}`]
+      ? [`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`]
       : [`${process.env.BACKEND_URL}/uploads/default-product-image.png`];
 
     const newProductQuery = `
@@ -132,14 +132,51 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const productId = req.params.id;
 
-    const updatedProduct = await db.query('UPDATE products SET name = $1, price = $2, description = $3, brand = $4, category = $5, count_in_stock = $6, image_urls = $7 WHERE id = $8 RETURNING *', [name, price, description, brand, category, count_in_stock, image_urls, id]);
-
-    if (updatedProduct.rows.length === 0) {
-      return res.status(404).json({ message: 'Product not found.' });
+    // 1. Fetch the existing product
+    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [productId]);
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+    const product = productResult.rows[0];
+
+    // 2. Prepare the updated data, parsing types and using existing values as fallbacks
+    const data = {
+      name: req.body.name || product.name,
+      price: req.body.price ? parseFloat(req.body.price) : product.price,
+      description: req.body.description || product.description,
+      brand: req.body.brand || product.brand,
+      category: req.body.category || product.category,
+      count_in_stock: req.body.count_in_stock ? parseInt(req.body.count_in_stock, 10) : product.count_in_stock,
+      supplier_id: req.body.supplier_id ? parseInt(req.body.supplier_id, 10) : product.supplier_id,
+      is_deal_of_the_day: req.body.is_deal_of_the_day !== undefined ? req.body.is_deal_of_the_day === 'true' : product.is_deal_of_the_day,
+      is_flash_sale: req.body.is_flash_sale !== undefined ? req.body.is_flash_sale === 'true' : product.is_flash_sale,
+      is_new_arrival: req.body.is_new_arrival !== undefined ? req.body.is_new_arrival === 'true' : product.is_new_arrival,
+      discounted_price: req.body.discounted_price ? parseFloat(req.body.discounted_price) : product.discounted_price,
+      has_free_delivery: req.body.has_free_delivery !== undefined ? req.body.has_free_delivery === 'true' : product.has_free_delivery,
+      estimated_delivery: req.body.estimated_delivery || product.estimated_delivery,
+      colors: req.body.colors || product.colors,
+      sizes: req.body.sizes || product.sizes,
+      is_highlighted: req.body.is_highlighted !== undefined ? req.body.is_highlighted === 'true' : product.is_highlighted,
+      // If a new file is uploaded, convert it to Base64. Otherwise, keep the existing image URLs.
+      image_urls: req.file ? [`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`] : product.image_urls,
+    };
+
+    // 3. Dynamically build the UPDATE query to only change the fields that were actually sent
+    const fields = Object.keys(data);
+    const setClauses = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
+    const values = Object.values(data);
+
+    const updateQuery = `
+      UPDATE products 
+      SET ${setClauses} 
+      WHERE id = $${fields.length + 1} 
+      RETURNING *
+    `;
+
+    // 4. Execute the query
+    const updatedProduct = await db.query(updateQuery, [...values, productId]);
 
     res.json(updatedProduct.rows[0]);
   } catch (error) {

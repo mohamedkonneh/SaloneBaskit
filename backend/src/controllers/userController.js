@@ -184,8 +184,9 @@ const uploadProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'Please upload an image file' });
     }
 
-    // Construct an absolute URL for the photo
-    const photoUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+    // Convert the image buffer to a Base64 data URI
+    const imageBase64 = req.file.buffer.toString('base64');
+    const photoUrl = `data:${req.file.mimetype};base64,${imageBase64}`;
 
     const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
     const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);

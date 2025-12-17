@@ -1,23 +1,9 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
-// Define the absolute path for the uploads directory
-const uploadDir = path.join(__dirname, '../../uploads');
-
-// Ensure the uploads directory exists, creating it if necessary
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Set up storage engine
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: function (req, file, cb) {
-    // Create a unique filename to prevent overwrites
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
+// Use memoryStorage to hold the file as a buffer in memory
+// This is necessary for Base64 conversion and avoids using the ephemeral filesystem.
+const storage = multer.memoryStorage();
 
 // Check file type
 function checkFileType(file, cb) {
