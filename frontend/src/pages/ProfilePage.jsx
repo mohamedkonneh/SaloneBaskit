@@ -40,9 +40,10 @@ const InfoPages = () => (
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const { userInfo, logout, updateUserInfo } = useAuth();
+  const { userInfo, logout, refetchUserInfo } = useAuth();
   const navigate = useNavigate();
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null); // New state for the selected file
   const [isUploading, setIsUploading] = useState(false);
 
   const handleLogout = () => {
@@ -50,29 +51,43 @@ const ProfilePage = () => {
     toast.info("You have been logged out successfully.");
     navigate('/login');
   };
-
-  const handlePhotoUpload = async (e) => {
+  
+  // Step 1: Handle file selection and set preview
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsUploading(true);
-    setPhotoPreview(URL.createObjectURL(file)); // Show preview immediately
+    setPhotoPreview(URL.createObjectURL(file));
+    setSelectedFile(file);
+  };
 
+  // Step 2: Handle the actual upload when the user clicks "Save"
+  const handleSavePhoto = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
     const formData = new FormData();
-    formData.append('photo', file);
+    formData.append('photo', selectedFile);
 
     try {
-      // Assumes an endpoint like POST /api/users/profile/photo
-      const { data } = await api.post('/users/profile/photo', formData);
-      updateUserInfo(data); // Update user info with new photo URL
+      await api.post('/users/profile/photo', formData);
+      await refetchUserInfo();
       toast.success('Profile photo updated!');
-      setPhotoPreview(null); // Clear preview after successful upload
+      // Clear selection and preview after successful upload
+      setPhotoPreview(null);
+      setSelectedFile(null);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Photo upload failed.');
       setPhotoPreview(null); // Clear preview on error
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Step 3: Allow user to cancel the change
+  const handleCancelUpload = () => {
+    setPhotoPreview(null);
+    setSelectedFile(null);
   };
 
   const renderContent = () => {
@@ -108,9 +123,19 @@ const ProfilePage = () => {
               {isUploading ? '...' : 'Edit'}
             </div>
           </label>
-          <input id="photo-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
+          <input id="photo-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect} />
           <h2 style={styles.profileName}>{userInfo?.name || 'Guest User'}</h2>
           <p style={styles.profileEmail}>{userInfo?.email}</p>
+          {selectedFile && (
+            <div style={styles.photoActions}>
+              <button onClick={handleSavePhoto} style={styles.saveButtonSmall} disabled={isUploading}>
+                {isUploading ? 'Saving...' : 'Save Photo'}
+              </button>
+              <button onClick={handleCancelUpload} style={styles.cancelButtonSmall} disabled={isUploading}>
+                Cancel
+              </button>
+            </div>
+          )}
         </aside>
         <aside style={styles.sidebar(isMobile)}>
           {navItems.map(item => (
@@ -221,7 +246,18 @@ const styles = {
   infoLabel: { display: 'block', fontWeight: 'bold', color: '#6c757d', marginBottom: '5px' },
   infoText: { fontSize: '1.1rem', margin: 0, padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px' },
   input: { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '1rem' },
-  saveButton: { padding: '12px 25px', border: 'none', borderRadius: '8px', backgroundColor: '#28a745', color: 'white', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' },
+  saveButton: { padding: '12px 25px', border: 'none', borderRadius: '8px', backgroundColor: '#28a745', color: 'white', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' },  
+  photoActions: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '15px',
+  },
+  saveButtonSmall: {
+    padding: '8px 12px', border: 'none', borderRadius: '6px', backgroundColor: '#28a745', color: 'white', fontSize: '0.8rem', cursor: 'pointer'
+  },
+  cancelButtonSmall: {
+    padding: '8px 12px', border: 'none', borderRadius: '6px', backgroundColor: '#6c757d', color: 'white', fontSize: '0.8rem', cursor: 'pointer'
+  },
 };
 
 export default ProfilePage;
