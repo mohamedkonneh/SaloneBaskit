@@ -5,8 +5,25 @@ const db = require('../config/db');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const products = await db.query('SELECT * FROM products ORDER BY created_at DESC');
-    res.json(products.rows);
+    // Implement pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 items per page
+    const offset = (page - 1) * limit;
+
+    // Query to get the total count of products
+    const totalProductsQuery = await db.query('SELECT COUNT(*) FROM products');
+    const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
+
+    // Query to get the paginated products
+    const productsQuery = 'SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
+    const products = await db.query(productsQuery, [limit, offset]);
+
+    res.json({
+      products: products.rows,
+      page,
+      pages: Math.ceil(totalProducts / limit),
+      total: totalProducts,
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Failed to fetch products.' });
