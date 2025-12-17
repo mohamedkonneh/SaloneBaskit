@@ -184,8 +184,8 @@ const uploadProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'Please upload an image file' });
     }
 
-    // The path should be what the browser can access, e.g., /uploads/photo-1629...
-    const photoUrl = `/uploads/${req.file.filename}`;
+    // Construct an absolute URL for the photo
+    const photoUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
 
     const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
     const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);
