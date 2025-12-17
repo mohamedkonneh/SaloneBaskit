@@ -28,7 +28,6 @@ router.delete('/:id', protect, admin, deleteUser);
 
 // Route for user to get their messages
 router.get('/mailbox', protect, getUserMailbox);
-router.get('/profile', protect, getUserProfile);
 
 // @route   POST /api/users/profile/photo
 router.post('/profile/photo', protect, upload.single('photo'), uploadProfilePhoto);
