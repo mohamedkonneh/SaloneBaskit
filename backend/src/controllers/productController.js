@@ -5,38 +5,46 @@ const db = require('../config/db');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    // Use default values for pagination to make it more robust and consistent
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 items per page
-    const offset = (page - 1) * limit;
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
     const keyword = req.query.keyword || '';
 
     // Base query and parameters
     let countQuery = 'SELECT COUNT(*) FROM products';
     let productsQuery = 'SELECT * FROM products';
-    const queryParams = [];
+    const params = [];
 
     // Add search keyword condition if it exists
     if (keyword) {
       const searchQuery = ' WHERE name ILIKE $1 OR description ILIKE $1';
       countQuery += searchQuery;
       productsQuery += searchQuery;
-      queryParams.push(`%${keyword}%`);
+      params.push(`%${keyword}%`);
     }
 
-    const totalProductsResult = await db.query(countQuery, queryParams);
-    const totalProducts = parseInt(totalProductsResult.rows[0].count, 10);
+    // If pagination parameters are provided, return the paginated object
+    if (page && limit) {
+      const offset = (page - 1) * limit;
 
-    productsQuery += ` ORDER BY created_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
-    const productsResult = await db.query(productsQuery, [...queryParams, limit, offset]);
+      const totalProductsQuery = await db.query(countQuery, params);
+      const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
 
-    res.json({
-      products: productsResult.rows,
-      page,
-      pages: Math.ceil(totalProducts / limit),
-      total: totalProducts,
-      keyword: keyword || null, // Return null if no keyword for clarity
-    });
+      productsQuery += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      const products = await db.query(productsQuery, [...params, limit, offset]);
+
+      return res.json({
+        products: products.rows,
+        page,
+        pages: Math.ceil(totalProducts / limit),
+        total: totalProducts,
+        keyword,
+      });
+    } else {
+      // Otherwise, return all products in a simple array for backward compatibility
+      productsQuery += ' ORDER BY created_at DESC';
+      const products = await db.query(productsQuery, params);
+      res.json(products.rows);
+    }
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Failed to fetch products.' });
