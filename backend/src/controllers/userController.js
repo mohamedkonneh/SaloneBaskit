@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('../config/cloudinary');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -184,22 +185,34 @@ const uploadProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'Please upload an image file' });
     }
 
-    // Convert the image buffer to a Base64 data URI
-    const imageBase64 = req.file.buffer.toString('base64');
-    const photoUrl = `data:${req.file.mimetype};base64,${imageBase64}`;
+    // Upload image to Cloudinary using a stream
+    const uploadStream = cloudinary.uploader.upload_stream({
+      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
+      folder: 'profile_photos', // Optional: organize uploads in Cloudinary
+    }, async (error, result) => {
+      if (error) {
+        console.error('Cloudinary upload error:', error);
+        return res.status(500).json({ message: 'Failed to upload image.' });
+      }
 
-    const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
-    const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);
-    const updatedUser = updatedUserResult.rows[0];
+      const photoUrl = result.secure_url;
 
-    res.json({
-      id: updatedUser.id,
-      name: updatedUser.username,
-      email: updatedUser.email,
-      isAdmin: updatedUser.is_admin,
-      photoUrl: updatedUser.photo_url,
-      token: generateToken(updatedUser.id),
+      const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
+      const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);
+      const updatedUser = updatedUserResult.rows[0];
+
+      res.json({
+        id: updatedUser.id,
+        name: updatedUser.username,
+        email: updatedUser.email,
+        isAdmin: updatedUser.is_admin,
+        photoUrl: updatedUser.photo_url,
+        token: generateToken(updatedUser.id),
+      });
     });
+
+    // Pipe the file buffer from memory into the upload stream
+    uploadStream.end(req.file.buffer);
   } catch (error) {
     console.error('Error uploading profile photo:', error);
     res.status(500).json({ message: 'Server error during photo upload.' });

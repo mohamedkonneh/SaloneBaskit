@@ -1,4 +1,22 @@
 const db = require('../config/db');
+const cloudinary = require('../config/cloudinary');
+
+// Helper function to upload a file buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
+        folder: 'products', // Organize product images
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -103,21 +121,32 @@ const createProduct = async (req, res) => {
     const is_highlighted = req.body.is_highlighted === 'true';
 
     // Basic validation for required fields.
-    if (!name || !description || !brand || !category || isNaN(price) || isNaN(count_in_stock) || isNaN(supplier_id)) {
-      return res.status(400).json({ message: 'Please provide all required fields: name, description, brand, category, price, stock, and supplier.' });
+    const errors = [];
+    if (!name) errors.push('Product name is required.');
+    if (!description) errors.push('Description is required.');
+    if (!brand) errors.push('Brand is required.');
+    if (!category) errors.push('Category is required.');
+    if (isNaN(price)) errors.push('A valid price is required.');
+    if (isNaN(count_in_stock)) errors.push('Stock quantity is required.');
+    if (isNaN(supplier_id)) errors.push('Supplier ID is required.');
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors.join(' ') });
     }
  
-    // Convert the uploaded file to a Base64 data URI.
-    const image_urls = req.file
-      ? [`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`]
-      : [`${process.env.BACKEND_URL}/uploads/default-product-image.png`];
+    let imageUrls = ['https://via.placeholder.com/500x500.png?text=No+Image']; // A default placeholder
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer);
+      imageUrls = [result.secure_url];
+    }
 
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, imageUrls]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -160,8 +189,28 @@ const updateProduct = async (req, res) => {
       sizes: req.body.sizes || product.sizes,
       is_highlighted: req.body.is_highlighted !== undefined ? req.body.is_highlighted === 'true' : product.is_highlighted,
       // If a new file is uploaded, convert it to Base64. Otherwise, keep the existing image URLs.
-      image_urls: req.file ? [`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`] : product.image_urls,
+      image_urls: product.image_urls, // Start with existing URLs
     };
+
+    // If a new file is uploaded, upload it and replace the image_urls
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer);
+      data.image_urls = [result.secure_url];
+    }
+
+    // 2.5 Validate the parsed data
+    const errors = [];
+    if (!data.name) errors.push('Product name cannot be empty.');
+    if (isNaN(data.price)) errors.push('Price must be a valid number.');
+    if (isNaN(data.count_in_stock)) errors.push('Stock quantity must be a valid number.');
+    if (isNaN(data.supplier_id)) errors.push('Supplier ID must be a valid number.');
+    if (data.discounted_price !== null && isNaN(data.discounted_price)) {
+      errors.push('Discounted price must be a valid number.');
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors.join(' ') });
+    }
 
     // 3. Dynamically build the UPDATE query to only change the fields that were actually sent
     const fields = Object.keys(data);
