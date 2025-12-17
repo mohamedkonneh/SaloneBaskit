@@ -87,32 +87,21 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    // When using multipart/form-data, all body values are strings. We must parse them.
-    const { name, description, brand, category, estimated_delivery, colors, sizes } = req.body;
-    const price = parseFloat(req.body.price);
-    const count_in_stock = parseInt(req.body.count_in_stock, 10);
-    const supplier_id = parseInt(req.body.supplier_id, 10);
-    const discounted_price = req.body.discounted_price ? parseFloat(req.body.discounted_price) : null;
+    // The frontend sends JSON, so we can destructure directly.
+    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
-    // Convert string 'true'/'false' to boolean
-    const is_deal_of_the_day = req.body.is_deal_of_the_day === 'true';
-    const is_flash_sale = req.body.is_flash_sale === 'true';
-    const is_new_arrival = req.body.is_new_arrival === 'true';
-    const has_free_delivery = req.body.has_free_delivery === 'true';
-    const is_highlighted = req.body.is_highlighted === 'true';
+    // Basic validation for required fields.
+    if (!name || !description || !brand || !category || price === undefined || count_in_stock === undefined || supplier_id === undefined) {
+      return res.status(400).json({ message: 'Please provide all required fields: name, description, brand, category, price, stock, and supplier.' });
+    }
  
-    // Use the uploaded file's URL, or a default placeholder if no file is uploaded.
-    const finalImageUrls = req.file
-      ? [`${process.env.BACKEND_URL}/uploads/${req.file.filename}`]
-      : [`${process.env.BACKEND_URL}/uploads/default-product-image.png`];
-
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
     const values = [
-      name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls
+      name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls
     ];
     const newProduct = await db.query(newProductQuery, values);
  
@@ -129,14 +118,14 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
   try {
+    const { id } = req.params;
     const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
-    const updatedProduct = await db.query(
-      `UPDATE products SET 
-        name = $1, price = $2, description = $3, brand = $4, category = $5, count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, has_free_delivery = $12, estimated_delivery = $13, colors = $14, sizes = $15, is_highlighted = $16, image_urls = $17
-       WHERE id = $18 RETURNING *`,
-      [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, req.params.id]
-    );
+    const updatedProduct = await db.query('UPDATE products SET name = $1, price = $2, description = $3, brand = $4, category = $5, count_in_stock = $6, image_urls = $7 WHERE id = $8 RETURNING *', [name, price, description, brand, category, count_in_stock, image_urls, id]);
+
+    if (updatedProduct.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
 
     res.json(updatedProduct.rows[0]);
   } catch (error) {
