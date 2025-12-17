@@ -7,26 +7,42 @@ const getProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);
+    const keyword = req.query.keyword || '';
+
+    // Base query and parameters
+    let countQuery = 'SELECT COUNT(*) FROM products';
+    let productsQuery = 'SELECT * FROM products';
+    const params = [];
+
+    // Add search keyword condition if it exists
+    if (keyword) {
+      const searchQuery = ' WHERE name ILIKE $1 OR description ILIKE $1';
+      countQuery += searchQuery;
+      productsQuery += searchQuery;
+      params.push(`%${keyword}%`);
+    }
 
     // If pagination parameters are provided, return the paginated object
     if (page && limit) {
       const offset = (page - 1) * limit;
 
-      const totalProductsQuery = await db.query('SELECT COUNT(*) FROM products');
+      const totalProductsQuery = await db.query(countQuery, params);
       const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
 
-      const productsQuery = 'SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
-      const products = await db.query(productsQuery, [limit, offset]);
+      productsQuery += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      const products = await db.query(productsQuery, [...params, limit, offset]);
 
       return res.json({
         products: products.rows,
         page,
         pages: Math.ceil(totalProducts / limit),
         total: totalProducts,
+        keyword,
       });
     } else {
       // Otherwise, return all products in a simple array for backward compatibility
-      const products = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+      productsQuery += ' ORDER BY created_at DESC';
+      const products = await db.query(productsQuery, params);
       res.json(products.rows);
     }
   } catch (error) {
