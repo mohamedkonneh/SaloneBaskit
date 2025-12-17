@@ -111,7 +111,7 @@ const updateUserProfile = async (req, res) => {
     // Use the new name from the body, or keep the existing name from req.user
     const updatedName = req.body.name || user.name;
 
-    const updateQuery = 'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email, is_admin';
+    const updateQuery = 'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
     const updatedUserResult = await db.query(updateQuery, [updatedName, user.id]);
     const updatedUser = updatedUserResult.rows[0];
 
@@ -120,6 +120,7 @@ const updateUserProfile = async (req, res) => {
       name: updatedUser.username, // Return username as 'name'
       email: updatedUser.email,
       isAdmin: updatedUser.is_admin,
+      photoUrl: updatedUser.photo_url, // Ensure photoUrl is returned on profile update
       // Note: A new token is only needed if the payload (e.g., user ID, roles) changes.
       token: generateToken(updatedUser.id),
     });
