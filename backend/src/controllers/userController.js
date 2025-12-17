@@ -32,7 +32,7 @@ const registerUser = async (req, res) => {
     const isAdmin = email === process.env.ADMIN_EMAIL;
 
     // 4. Insert new user into the database, now including the is_admin status
-    const newUserQuery = 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, email, is_admin';
+    const newUserQuery = 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, email, is_admin, photo_url';
     const newUser = await db.query(newUserQuery, [name, email, password_hash, isAdmin]);
 
     const user = newUser.rows[0];
@@ -44,6 +44,7 @@ const registerUser = async (req, res) => {
       name: user.username, // Return username as 'name' to match frontend expectations
       email: user.email,
       isAdmin: user.is_admin,
+      photoUrl: user.photo_url, // Will be null for new users, which is correct
       token: generateToken(user.id),
     });
   } catch (error) {
@@ -76,6 +77,7 @@ const loginUser = async (req, res) => {
       name: user.username, // Return username as 'name'
       email: user.email,
       isAdmin: user.is_admin,
+      photoUrl: user.photo_url, // Include photoUrl on login
       token: generateToken(user.id),
     });
   } catch (error) {
