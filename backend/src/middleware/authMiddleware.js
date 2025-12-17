@@ -13,7 +13,7 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Get user from the token (excluding the password)
-      const { rows } = await db.query('SELECT id, name, email, is_admin FROM users WHERE id = $1', [decoded.id]);
+      const { rows } = await db.query('SELECT id, username, email, is_admin, photo_url FROM users WHERE id = $1', [decoded.id]);
       
       if (!rows[0]) {
         return res.status(401).json({ message: 'Not authorized, user not found' });

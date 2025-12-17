@@ -197,7 +197,7 @@ const uploadProfilePhoto = async (req, res) => {
       id: updatedUser.id,
       name: updatedUser.username,
       email: updatedUser.email,
-      isAdmin: updatedUser.is_admin,
+      isAdmin: updatedUser.is_admin, // Corrected from photo_url
       photoUrl: updatedUser.photo_url,
       token: generateToken(updatedUser.id),
     });
