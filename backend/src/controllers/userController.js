@@ -109,7 +109,7 @@ const updateUserProfile = async (req, res) => {
     const user = req.user;
 
     // Use the new name from the body, or keep the existing name from req.user
-    const updatedName = req.body.name || user.name;
+    const updatedName = req.body.name || user.username;
 
     const updateQuery = 'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
     const updatedUserResult = await db.query(updateQuery, [updatedName, user.id]);
@@ -195,7 +195,7 @@ const uploadProfilePhoto = async (req, res) => {
       id: updatedUser.id,
       name: updatedUser.username,
       email: updatedUser.email,
-      isAdmin: updatedUser.is_admin, // Corrected from photo_url
+      isAdmin: updatedUser.is_admin,
       photoUrl: updatedUser.photo_url,
       token: generateToken(updatedUser.id),
     });
