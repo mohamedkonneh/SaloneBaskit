@@ -180,12 +180,6 @@ const getUserMailbox = async (req, res) => {
 
 const uploadProfilePhoto = async (req, res) => {
   try {
-    const user = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-
-    if (user.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload an image file' });
     }
