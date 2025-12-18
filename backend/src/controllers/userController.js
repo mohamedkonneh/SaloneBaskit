@@ -1,24 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const cloudinary = require('../config/cloudinary');
-
-// Helper function to upload a file buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
-        folder: 'user_photos', // Organize user photos
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    uploadStream.end(fileBuffer);
-  });
-};
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -203,7 +185,7 @@ const updateUserProfilePhoto = async (req, res) => {
     }
 
     // Upload to Cloudinary
-    const result = await uploadToCloudinary(req.file.buffer);
+    const result = await uploadToCloudinary(req.file.buffer, 'user_photos');
     const photoUrl = result.secure_url;
 
     // Update user in the database
