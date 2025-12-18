@@ -189,7 +189,8 @@ const AdminProductListPage = () => {
 
       const productData = { 
         ...formState, 
-        // Combine existing images with newly uploaded ones
+        // --- FIX: Ensure supplier_id is an integer before sending to the backend ---
+        supplier_id: parseInt(formState.supplier_id, 10),
         image_urls: [...existingImageUrls, ...newImages.urls],
         public_ids: [...existingPublicIds, ...newImages.publicIds],
         // Ensure brand name is synced with the selected supplier
