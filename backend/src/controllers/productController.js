@@ -129,9 +129,9 @@ const createProduct = async (req, res) => {
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
-    console.error(error.message);
+    console.error('Error creating product:', { errorMessage: error.message, requestBody: req.body });
     // Use the centralized error handler for a consistent JSON response
-    res.status(500).json({ message: 'Failed to save product.' });
+    res.status(500).json({ message: 'An internal error occurred while saving the product.' });
   }
 };
 
@@ -175,8 +175,8 @@ const updateProduct = async (req, res) => {
 
     res.json(updatedProduct.rows[0]);
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Failed to update product.' });
+    console.error('Error updating product:', { errorMessage: error.message, requestBody: req.body });
+    res.status(500).json({ message: 'An internal error occurred while updating the product.' });
   }
 };
 
