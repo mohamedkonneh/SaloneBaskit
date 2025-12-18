@@ -25,4 +25,25 @@ const uploadToCloudinary = (fileBuffer, folder) => {
   });
 };
 
-module.exports = { uploadToCloudinary };
+/**
+ * Deletes images from Cloudinary based on their public IDs.
+ * @param {string[]} publicIds An array of public IDs to delete.
+ * @returns {Promise<object>} A promise that resolves with the deletion result.
+ */
+const deleteFromCloudinary = (publicIds) => {
+  return new Promise((resolve, reject) => {
+    if (!publicIds || publicIds.length === 0) {
+      return resolve({ result: 'ok', message: 'No images to delete.' });
+    }
+    cloudinary.api.delete_resources(publicIds, (error, result) => {
+      if (error) {
+        console.error('Cloudinary Deletion Error:', error);
+        return reject(error);
+      }
+      resolve(result);
+    });
+  });
+};
+
+
+module.exports = { uploadToCloudinary, deleteFromCloudinary };

@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { deleteFromCloudinary } = require('../services/cloudinaryService');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -184,11 +185,34 @@ const updateProduct = async (req, res) => {
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
 const deleteProduct = async (req, res) => {
+  const { id } = req.params;
   try {
+    // First, find the product to get its image URLs
+    const productResult = await db.query('SELECT image_urls FROM products WHERE id = $1', [id]);
+
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
+
+    const imageUrls = productResult.rows[0].image_urls;
+
+    // If there are images, delete them from Cloudinary
+    if (imageUrls && imageUrls.length > 0) {
+      // Extract public_id from URL. Example: .../folder/public_id.jpg
+      const publicIds = imageUrls.map(url => {
+        const parts = url.split('/');
+        const filename = parts.pop();
+        const publicIdWithFolder = parts.slice(parts.indexOf('product_images')).join('/') + '/' + filename.split('.')[0];
+        return publicIdWithFolder;
+      });
+      await deleteFromCloudinary(publicIds);
+    }
+
+    // Finally, delete the product from the database
     await db.query('DELETE FROM products WHERE id = $1', [req.params.id]);
     res.json({ message: 'Product removed' });
   } catch (error) {
-    console.error(error.message);
+    console.error(`Error deleting product ${id}:`, error);
     res.status(500).json({ message: 'Failed to delete product.' });
   }
 };
