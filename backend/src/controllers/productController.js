@@ -126,7 +126,7 @@ const createProduct = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, `{${image_urls.join(',')}}`]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -165,7 +165,7 @@ const updateProduct = async (req, res) => {
       name, price, description, brand, category_id, count_in_stock, supplier_id, 
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
-      `{${image_urls.join(',')}}`, id
+      image_urls, id
     ];
 
     const updatedProduct = await db.query(updateQuery, values);
