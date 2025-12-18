@@ -136,9 +136,12 @@ const createProduct = async (req, res) => {
  
     let imageUrls = ['https://via.placeholder.com/500x500.png?text=No+Image']; // A default placeholder
 
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer);
-      imageUrls = [result.secure_url];
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+      const uploadResults = await Promise.all(uploadPromises);
+      imageUrls = uploadResults.map(result => result.secure_url);
+    } else if (req.body.image_urls) { // Handle case where URLs are sent directly
+      imageUrls = Array.isArray(req.body.image_urls) ? req.body.image_urls : [req.body.image_urls];
     }
 
     const newProductQuery = `
@@ -189,13 +192,18 @@ const updateProduct = async (req, res) => {
       sizes: req.body.sizes || product.sizes,
       is_highlighted: req.body.is_highlighted !== undefined ? req.body.is_highlighted === 'true' : product.is_highlighted,
       // If a new file is uploaded, convert it to Base64. Otherwise, keep the existing image URLs.
-      image_urls: product.image_urls, // Start with existing URLs
+      // Also, check if the existing URL is a local path and replace it if so.
+      image_urls: product.image_urls,
     };
 
     // If a new file is uploaded, upload it and replace the image_urls
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer);
-      data.image_urls = [result.secure_url];
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+      const uploadResults = await Promise.all(uploadPromises);
+      data.image_urls = uploadResults.map(result => result.secure_url);
+    } else if (!data.image_urls || data.image_urls.some(url => url.startsWith('/uploads'))) {
+      // If no new files and existing URLs are invalid/local, use a placeholder.
+      data.image_urls = ['https://via.placeholder.com/500x500.png?text=No+Image'];
     }
 
     // 2.5 Validate the parsed data
