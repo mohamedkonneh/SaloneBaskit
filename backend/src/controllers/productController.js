@@ -102,7 +102,7 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
     // Basic validation for required fields.
     const errors = [];
@@ -121,11 +121,11 @@ const createProduct = async (req, res) => {
     }
 
     const newProductQuery = `
-      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
+      INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -142,7 +142,7 @@ const updateProduct = async (req, res) => {
   try {
     // Since the frontend sends the full product object, we can perform a direct update.
     const { id } = req.params;
-    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
     // Enforce that at least one image URL is provided during an update.
     if (!image_urls || image_urls.length === 0) {
@@ -151,7 +151,7 @@ const updateProduct = async (req, res) => {
 
     const updateQuery = `
       UPDATE products SET 
-        name = $1, price = $2, description = $3, brand = $4, category = $5, 
+        name = $1, price = $2, description = $3, brand = $4, category_id = $5, 
         count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, 
         is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, 
         has_free_delivery = $12, estimated_delivery = $13, colors = $14, 
@@ -161,7 +161,7 @@ const updateProduct = async (req, res) => {
     `;
 
     const values = [
-      name, price, description, brand, category, count_in_stock, supplier_id, 
+      name, price, description, brand, category_id, count_in_stock, supplier_id, 
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
       image_urls, id
