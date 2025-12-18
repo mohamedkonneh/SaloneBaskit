@@ -105,12 +105,21 @@ const createProduct = async (req, res) => {
   try {
     const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
-    // Basic validation for required fields.
+    // Basic validation for required fields and type coercion.
     const errors = [];
     if (!name) errors.push('Product name is required.');
-    if (price === undefined) errors.push('A valid price is required.');
-    if (count_in_stock === undefined) errors.push('Stock quantity is required.');
-    if (supplier_id === undefined) errors.push('Supplier is required.');
+
+    // Coerce and validate numeric fields coming from the client (they can be empty strings)
+    const parsedPrice = (price === '' || price === undefined) ? NaN : parseFloat(price);
+    if (isNaN(parsedPrice)) errors.push('A valid price is required.');
+
+    const parsedCount = (count_in_stock === '' || count_in_stock === undefined) ? NaN : parseInt(count_in_stock, 10);
+    if (isNaN(parsedCount)) errors.push('A valid stock quantity is required.');
+
+    const parsedSupplierId = (supplier_id === '' || supplier_id === undefined) ? NaN : parseInt(supplier_id, 10);
+    if (isNaN(parsedSupplierId)) errors.push('A valid supplier is required.');
+
+    const parsedDiscountedPrice = (discounted_price === '' || discounted_price === undefined || discounted_price === null) ? null : parseFloat(discounted_price);
 
     if (errors.length > 0) {
       return res.status(400).json({ message: errors.join(' '), errors });
@@ -120,6 +129,10 @@ const createProduct = async (req, res) => {
     if (!image_urls || !Array.isArray(image_urls) || image_urls.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
+
+    // Normalize colors and sizes to arrays if necessary
+    const normalizedColors = Array.isArray(colors) ? colors : (typeof colors === 'string' ? colors.split(',').map(c => c.trim()).filter(Boolean) : []);
+    const normalizedSizes = Array.isArray(sizes) ? sizes : (typeof sizes === 'string' ? sizes.split(',').map(s => s.trim()).filter(Boolean) : []);
 
     // Look up category_id from the provided category name
     let category_id;
@@ -141,7 +154,26 @@ const createProduct = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors || [], sizes || [], is_highlighted, image_urls, public_ids]);
+    const newProduct = await db.query(newProductQuery, [
+      name,
+      parsedPrice,
+      description,
+      brand,
+      category_id,
+      parsedCount,
+      parsedSupplierId,
+      !!is_deal_of_the_day,
+      !!is_flash_sale,
+      !!is_new_arrival,
+      parsedDiscountedPrice,
+      !!has_free_delivery,
+      estimated_delivery || null,
+      normalizedColors,
+      normalizedSizes,
+      !!is_highlighted,
+      image_urls,
+      public_ids,
+    ]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -165,13 +197,28 @@ const updateProduct = async (req, res) => {
       return res.status(400).json({ message: 'Product must have at least one image.' });
     }
 
+    // Coerce and validate numeric fields
+    const parsedPrice = (price === '' || price === undefined) ? NaN : parseFloat(price);
+    if (isNaN(parsedPrice)) return res.status(400).json({ message: 'A valid price is required.' });
+
+    const parsedCount = (count_in_stock === '' || count_in_stock === undefined) ? NaN : parseInt(count_in_stock, 10);
+    if (isNaN(parsedCount)) return res.status(400).json({ message: 'A valid stock quantity is required.' });
+
+    const parsedSupplierId = (supplier_id === '' || supplier_id === undefined) ? NaN : parseInt(supplier_id, 10);
+    if (isNaN(parsedSupplierId)) return res.status(400).json({ message: 'A valid supplier is required.' });
+
+    const parsedDiscountedPrice = (discounted_price === '' || discounted_price === undefined || discounted_price === null) ? null : parseFloat(discounted_price);
+
+    // Normalize colors/sizes
+    const normalizedColors = Array.isArray(colors) ? colors : (typeof colors === 'string' ? colors.split(',').map(c => c.trim()).filter(Boolean) : []);
+    const normalizedSizes = Array.isArray(sizes) ? sizes : (typeof sizes === 'string' ? sizes.split(',').map(s => s.trim()).filter(Boolean) : []);
+
     // 1. Get the current public_ids from the database to compare
     const currentProductResult = await db.query('SELECT public_ids FROM products WHERE id = $1', [id]);
     if (currentProductResult.rows.length === 0) {
       return res.status(404).json({ message: 'Product not found.' });
     }
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
-
     // Look up category_id from the provided category name
     let category_id;
     if (category) {
@@ -204,10 +251,25 @@ const updateProduct = async (req, res) => {
     `;
 
     const values = [
-      name, price, description, brand, category_id, count_in_stock, supplier_id, 
-      is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
-      has_free_delivery, estimated_delivery, colors || [], sizes || [], is_highlighted, 
-      image_urls, public_ids, id
+      name,
+      parsedPrice,
+      description,
+      brand,
+      category_id,
+      parsedCount,
+      parsedSupplierId,
+      !!is_deal_of_the_day,
+      !!is_flash_sale,
+      !!is_new_arrival,
+      parsedDiscountedPrice,
+      !!has_free_delivery,
+      estimated_delivery || null,
+      normalizedColors,
+      normalizedSizes,
+      !!is_highlighted,
+      image_urls,
+      public_ids,
+      id,
     ];
 
     const updatedProduct = await db.query(updateQuery, values);

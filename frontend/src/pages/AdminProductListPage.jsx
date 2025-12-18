@@ -196,7 +196,8 @@ const AdminProductListPage = () => {
       }
       fetchProducts();
     } catch (err) {
-      setError('Failed to save product.');
+      const msg = err.response?.data?.message || 'Failed to save product.';
+      setError(msg);
     } finally {
       setIsModalOpen(false);
     }
