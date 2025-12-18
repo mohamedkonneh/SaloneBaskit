@@ -2,10 +2,12 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+const { initCloudinary } = require('./config/cloudinary');
+initCloudinary(); // Initialize Cloudinary after dotenv has run
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors'); 
-const db = require('./config/db'); // Import the database connection
 const { initSocket } = require('./socket'); // Import the socket initializer
 
 // --- Route Imports ---
@@ -13,6 +15,7 @@ const apiRoutes = require('./routes'); // Import the central API router
 const uploadRoutes = require('./routes/uploadRoutes'); // Import the new upload routes
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
+const db = require('./config/db'); // Import the database connection
 const app = express();
 
 // --- CORS Configuration ---
