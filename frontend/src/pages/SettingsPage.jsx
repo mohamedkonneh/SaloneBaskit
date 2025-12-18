@@ -1,128 +1,165 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axiosConfig';
 import { toast } from 'react-toastify';
-import { FaLanguage, FaMoneyBillWave, FaMoon, FaSun } from 'react-icons/fa';
-import { useSettings } from '../context/SettingsContext'; // Import the custom hook
-import { useTheme } from '../context/ThemeContext'; // Import the theme hook
 
 const SettingsPage = () => {
-  const { settings: globalSettings, setSettings: setGlobalSettings } = useSettings();
-  const { theme, toggleTheme } = useTheme();
-  const [localSettings, setLocalSettings] = useState(globalSettings);
+  const { userInfo, refetchUserInfo } = useAuth();
+  
+  // State for the name update form
+  const [name, setName] = useState(userInfo?.name || '');
+  
+  // State for the password change form
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSettingChange = (e) => {
-    const { name, value } = e.target;
-    setLocalSettings(prev => ({ ...prev, [name]: value }));
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  const handleNameUpdate = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error('Name cannot be empty.');
+      return;
+    }
+
+    setIsUpdatingName(true);
+    try {
+      await api.put('/users/profile', { name });
+      await refetchUserInfo();
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile.');
+    } finally {
+      setIsUpdatingName(false);
+    }
   };
 
-  const handleSaveChanges = () => {
-    // Update the global settings context with the local changes
-    setGlobalSettings(localSettings);
-    toast.success('Settings saved successfully!');
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      // Note: You will need to create this backend endpoint
+      await api.put('/users/profile/password', {
+        currentPassword,
+        newPassword,
+      });
+      toast.success('Password changed successfully!');
+      // Clear password fields after successful change
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to change password.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   return (
-    <div>
-      <h2 style={styles.title}>Settings</h2>
-      <div style={styles.settingsContainer}>
-        {/* Language Setting */}
-        <div style={styles.settingCard}>
-          <div style={styles.cardHeader}>
-            <FaLanguage style={styles.icon} />
-            <h3 style={styles.cardTitle}>Language</h3>
+    <div style={styles.contentPanel}>
+      {/* Update Name Section */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Update Your Profile</h2>
+        <form onSubmit={handleNameUpdate}>
+          <div style={styles.formGroup}>
+            <label htmlFor="name" style={styles.label}>Name</label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={styles.input}
+              placeholder="Enter your full name"
+            />
           </div>
-          <p style={styles.cardDescription}>Choose your preferred language for the application.</p>
-          <select 
-            name="language" 
-            value={localSettings.language} 
-            onChange={handleSettingChange} 
-            style={styles.select}
-          >
-            <option value="en">English</option>
-            <option value="fr">Français (French)</option>
-            <option value="es">Español (Spanish)</option>
-          </select>
-        </div>
-
-        {/* Currency Setting */}
-        <div style={styles.settingCard}>
-          <div style={styles.cardHeader}>
-            <FaMoneyBillWave style={styles.icon} />
-            <h3 style={styles.cardTitle}>Currency</h3>
-          </div>
-          <p style={styles.cardDescription}>Select the currency for displaying prices.</p>
-          <select 
-            name="currency" 
-            value={localSettings.currency} 
-            onChange={handleSettingChange} 
-            style={styles.select}
-          >
-            <option value="USD">USD - United States Dollar</option>
-            <option value="EUR">EUR - Euro</option>
-            <option value="SLE">SLE - Sierra Leonean Leone</option>
-            <option value="GBP">GBP - British Pound</option>
-          </select>
-        </div>
-
-        {/* Theme Setting */}
-        <div style={styles.settingCard}>
-          <div style={styles.cardHeader}>
-            {theme === 'light' ? <FaSun style={styles.icon} /> : <FaMoon style={styles.icon} />}
-            <h3 style={styles.cardTitle}>Theme</h3>
-          </div>
-          <p style={styles.cardDescription}>Switch between light and dark mode.</p>
-          <div style={styles.toggleContainer}>
-            <span>Light</span>
-            <label style={styles.switch}>
-              <input type="checkbox" onChange={toggleTheme} checked={theme === 'dark'} />
-              <span style={{...styles.slider, ...styles.round}}></span>
-            </label>
-            <span>Dark</span>
-          </div>
-        </div>
+          <button type="submit" style={styles.saveButton} disabled={isUpdatingName}>
+            {isUpdatingName ? 'Saving...' : 'Save Name'}
+          </button>
+        </form>
       </div>
-      <div style={styles.actions}>
-        <button onClick={handleSaveChanges} style={styles.saveButton}>Save Changes</button>
+
+      {/* Change Password Section */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Change Password</h2>
+        <form onSubmit={handlePasswordChange}>
+          <div style={styles.formGroup}>
+            <label htmlFor="currentPassword" style={styles.label}>Current Password</label>
+            <input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              style={styles.input}
+              placeholder="Enter your current password"
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="newPassword" style={styles.label}>New Password</label>
+            <input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={styles.input}
+              placeholder="Enter your new password"
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="confirmPassword" style={styles.label}>Confirm New Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={styles.input}
+              placeholder="Confirm your new password"
+            />
+          </div>
+          <button type="submit" style={styles.saveButton} disabled={isUpdatingPassword}>
+            {isUpdatingPassword ? 'Saving...' : 'Change Password'}
+          </button>
+        </form>
       </div>
     </div>
   );
 };
 
 const styles = {
-  title: { marginBottom: '20px', fontSize: '1.8rem' },
-  settingsContainer: { display: 'grid', gap: '25px' },
-  settingCard: { backgroundColor: '#f8f9fa', padding: '25px', borderRadius: '12px', border: '1px solid #eee' },
-  cardHeader: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' },
-  icon: { color: '#007bff', fontSize: '1.5rem' },
-  cardTitle: { margin: 0, fontSize: '1.2rem' },
-  cardDescription: { margin: '0 0 15px 0', color: '#6c757d' },
-  select: { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '1rem' },
-  actions: { marginTop: '30px', textAlign: 'right' },
+  contentPanel: { backgroundColor: '#fff', padding: '30px', borderRadius: '8px', border: '1px solid #eee' },
+  section: { marginBottom: '40px', borderBottom: '1px solid #f0f0f0', paddingBottom: '30px' },
+  sectionTitle: { fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '20px', color: '#333' },
+  formGroup: { marginBottom: '1.5rem' },
+  label: { display: 'block', fontWeight: 'bold', color: '#6c757d', marginBottom: '8px' },
+  input: {
+    width: '100%',
+    padding: '12px',
+    border: '1px solid #ccc',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    boxSizing: 'border-box',
+  },
   saveButton: {
     padding: '12px 25px',
     border: 'none',
     borderRadius: '8px',
-    backgroundColor: '#28a745',
+    backgroundColor: '#007bff',
     color: 'white',
     fontSize: '1rem',
     fontWeight: 'bold',
     cursor: 'pointer',
+    transition: 'background-color 0.2s',
   },
-  // --- Toggle Switch Styles ---
-  toggleContainer: { display: 'flex', alignItems: 'center', gap: '10px' },
-  switch: { position: 'relative', display: 'inline-block', width: '60px', height: '34px' },
-  'switch input': { opacity: 0, width: 0, height: 0 },
-  slider: {
-    position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: '#ccc', transition: '.4s',
-  },
-  'slider:before': {
-    position: 'absolute', content: '""', height: '26px', width: '26px',
-    left: '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s',
-  },
-  'input:checked + .slider': { backgroundColor: '#007bff' },
-  'input:checked + .slider:before': { transform: 'translateX(26px)' },
-  round: { borderRadius: '34px' },
-  'round:before': { borderRadius: '50%' },
 };
 
 export default SettingsPage;
