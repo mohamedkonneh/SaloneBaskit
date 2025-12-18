@@ -19,7 +19,7 @@ const AdminProductListPage = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [formState, setFormState] = useState({
     name: '', description: '', image_url: '', brand: '', category: '',
-    price: '', count_in_stock: '', image_urls: [], public_ids: [],
+    price: '', count_in_stock: '', image_urls: [], public_ids: [], category_id: '',
     is_deal_of_the_day: false,
     supplier_id: '', // Add supplier_id to form state
     is_flash_sale: false,
@@ -106,6 +106,7 @@ const AdminProductListPage = () => {
       estimated_delivery: '',
       image_urls: [], 
       public_ids: [],
+      category_id: '',
       colors: '',
       sizes: '',
     });
@@ -121,7 +122,7 @@ const AdminProductListPage = () => {
       description: product.description || '',
       image_urls: product.image_urls || [],
       brand: product.brand || '',
-      category: product.category || '',
+      category_id: product.category_id || '',
       count_in_stock: product.count_in_stock || '',
       supplier_id: product.supplier_id || '',
       is_deal_of_the_day: product.is_deal_of_the_day || false,
@@ -189,7 +190,8 @@ const AdminProductListPage = () => {
 
       const productData = { 
         ...formState, 
-        // --- FIX: Ensure supplier_id is an integer before sending to the backend ---
+        // --- FIX: Ensure IDs are integers before sending to the backend ---
+        category_id: parseInt(formState.category_id, 10),
         supplier_id: parseInt(formState.supplier_id, 10),
         image_urls: [...existingImageUrls, ...newImages.urls],
         public_ids: [...existingPublicIds, ...newImages.publicIds],
@@ -243,9 +245,9 @@ const AdminProductListPage = () => {
                   </div>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Category</label>
-                    <select name="category" value={formState.category} onChange={handleInputChange} style={styles.input} required>
+                    <select name="category_id" value={formState.category_id} onChange={handleInputChange} style={styles.input} required>
                       <option value="">Select a category...</option>
-                      {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                     </select>
                   </div>
                   <div style={styles.formGroup}>
