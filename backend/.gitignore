@@ -6,3 +6,6 @@
 
 # Database Dumps
 *.dump
+
+# Environment variables
+.env

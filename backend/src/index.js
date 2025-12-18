@@ -10,6 +10,7 @@ const { initSocket } = require('./socket'); // Import the socket initializer
 
 // --- Route Imports ---
 const apiRoutes = require('./routes'); // Import the central API router
+const uploadRoutes = require('./routes/uploadRoutes'); // Import the new upload routes
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -46,6 +47,7 @@ app.get('/', (req, res) => {
 
 // --- API Routes ---
 app.use('/api', apiRoutes);
+app.use('/api/upload', uploadRoutes); // Add the dedicated upload route
 
 // --- Error Handling Middleware ---
 app.use(notFound);

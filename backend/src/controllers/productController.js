@@ -1,22 +1,4 @@
 const db = require('../config/db');
-const cloudinary = require('../config/cloudinary');
-
-// Helper function to upload a file buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
-        folder: 'products', // Organize product images
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    uploadStream.end(fileBuffer);
-  });
-};
 
 // @desc    Fetch all products
 // @route   GET /api/products
