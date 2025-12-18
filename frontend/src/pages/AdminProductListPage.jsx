@@ -178,15 +178,19 @@ const AdminProductListPage = () => {
     try {
       // When editing, we need to preserve the existing images that were not removed.
       const finalImageUrls = editingProduct ? formState.image_urls : [];
+      // Convert comma-separated strings to arrays, trimming whitespace and removing empty entries
+      const colorsArray = formState.colors.split(',').map(c => c.trim()).filter(c => c);
+      const sizesArray = formState.sizes.split(',').map(s => s.trim()).filter(s => s);
+
       const productData = { 
         ...formState, 
         image_urls: [...finalImageUrls, ...uploadedImageUrls],
         // Ensure brand name is synced with the selected supplier
         brand: suppliers.find(s => s.id === parseInt(formState.supplier_id))?.name || formState.brand,
         discounted_price: formState.discounted_price === '' ? null : formState.discounted_price,
-        // Convert comma-separated strings to arrays, trimming whitespace and removing empty entries
-        colors: formState.colors.split(',').map(c => c.trim()).filter(c => c),
-        sizes: formState.sizes.split(',').map(s => s.trim()).filter(s => s),
+        // --- FIX: Use the correctly formatted arrays ---
+        colors: colorsArray,
+        sizes: sizesArray,
       };
 
       if (editingProduct) {
