@@ -24,7 +24,7 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product, quantity) => {
+  const addToCart = (product, qty = 1) => { // Default quantity to 1
     const existingItem = cartItems.find((item) => item.id === product.id);
 
     if (existingItem) {
@@ -32,13 +32,13 @@ export const CartProvider = ({ children }) => {
       setCartItems(
         cartItems.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: (item.quantity || 0) + qty } // Ensure existing quantity is a number
             : item
         )
       );
     } else {
       // If item is new, add it to the cart
-      setCartItems([...cartItems, { ...product, quantity }]);
+      setCartItems([...cartItems, { ...product, quantity: qty }]);
     }
     toast.success(`${product.name} added to cart!`);
   };
@@ -66,7 +66,7 @@ export const CartProvider = ({ children }) => {
     addToCart,
     removeFromCart,
     updateQuantity,
-    cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
+    cartItemCount: cartItems.reduce((count, item) => count + (item.quantity || 0), 0),
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
