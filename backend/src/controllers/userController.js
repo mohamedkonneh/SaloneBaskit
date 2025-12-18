@@ -148,12 +148,27 @@ const getUsers = async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
 const deleteUser = async (req, res) => {
+  const userId = req.params.id;
   try {
     // Check if the user to be deleted exists first for a better response.
-    const userExists = await db.query('SELECT id FROM users WHERE id = $1', [req.params.id]);
+    const userResult = await db.query('SELECT id, photo_url FROM users WHERE id = $1', [userId]);
 
-    if (userExists.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userPhotoUrl = userResult.rows[0].photo_url;
+
+    // If the user has a photo, delete it from Cloudinary
+    if (userPhotoUrl) {
+      try {
+        const parts = userPhotoUrl.split('/');
+        const filename = parts.pop();
+        const publicIdWithFolder = parts.slice(parts.indexOf('user_photos')).join('/') + '/' + filename.split('.')[0];
+        await deleteFromCloudinary([publicIdWithFolder]);
+      } catch (deleteError) {
+        console.warn(`Failed to delete photo for user ${userId} from Cloudinary:`, deleteError);
+      }
     }
 
     await db.query('DELETE FROM users WHERE id = $1', [req.params.id]); res.json({ message: 'User removed' });
@@ -185,14 +200,30 @@ const updateUserProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'No photo file provided.' });
     }
 
+    // 1. Get current user's photo_url to potentially delete old image
+    const currentUserResult = await db.query('SELECT photo_url FROM users WHERE id = $1', [req.user.id]);
+    const oldPhotoUrl = currentUserResult.rows[0]?.photo_url;
+
     // Upload to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, 'user_photos');
     const photoUrl = result.secure_url;
 
-    // Update user in the database
-    const updatedUser = await db.query('UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING *', [photoUrl, req.user.id]);
+    // 2. Update user in the database with new photo URL
+    const updatedUserResult = await db.query('UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url', [photoUrl, req.user.id]);
+    const updatedUser = updatedUserResult.rows[0];
 
-    res.json(updatedUser.rows[0]);
+    // 3. If an old photo existed and a new one was uploaded, delete the old one from Cloudinary
+    if (oldPhotoUrl && oldPhotoUrl !== photoUrl) {
+      try {
+        const parts = oldPhotoUrl.split('/');
+        const filename = parts.pop();
+        const publicIdWithFolder = parts.slice(parts.indexOf('user_photos')).join('/') + '/' + filename.split('.')[0];
+        await deleteFromCloudinary([publicIdWithFolder]);
+      } catch (deleteError) {
+        console.warn('Failed to delete old user photo from Cloudinary:', deleteError);
+      }
+    }
+    res.json(updatedUser);
   } catch (error) {
     console.error('Photo upload error:', error);
     res.status(500).json({ message: 'Failed to update profile photo.' });
