@@ -103,7 +103,7 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids } = req.body;
+    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
     // Basic validation for required fields.
     const errors = [];
@@ -121,12 +121,27 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
 
+    // Look up category_id from the provided category name
+    let category_id;
+    if (category) {
+      const categoryResult = await db.query('SELECT id FROM categories WHERE name = $1', [category]);
+      if (categoryResult.rows.length === 0) {
+        return res.status(400).json({ message: `Category '${category}' does not exist.` });
+      }
+      category_id = categoryResult.rows[0].id;
+    } else {
+      return res.status(400).json({ message: 'Category is required.' });
+    }
+
+    // Derive public_ids from the image_urls
+    const public_ids = image_urls.map(url => url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.')));
+
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors || [], sizes || [], is_highlighted, image_urls, public_ids || []]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors || [], sizes || [], is_highlighted, image_urls, public_ids]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -143,7 +158,7 @@ const updateProduct = async (req, res) => {
   try {
     // Since the frontend sends the full product object, we can perform a direct update.
     const { id } = req.params;
-    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids } = req.body;
+    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
     
     // Enforce that at least one image URL is provided during an update.
     if (!image_urls || !Array.isArray(image_urls) || image_urls.length === 0) {
@@ -157,8 +172,22 @@ const updateProduct = async (req, res) => {
     }
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
+    // Look up category_id from the provided category name
+    let category_id;
+    if (category) {
+      const categoryResult = await db.query('SELECT id FROM categories WHERE name = $1', [category]);
+      if (categoryResult.rows.length === 0) {
+        return res.status(400).json({ message: `Category '${category}' does not exist.` });
+      }
+      category_id = categoryResult.rows[0].id;
+    } else {
+      return res.status(400).json({ message: 'Category is required.' });
+    }
+
+    // Derive public_ids from the image_urls
+    const public_ids = image_urls.map(url => url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.')));
     // 3. Determine which images to delete from Cloudinary
-    const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
+    const publicIdsToDelete = currentPublicIds.filter(id => !public_ids.includes(id));
     if (publicIdsToDelete.length > 0) {
       await deleteFromCloudinary(publicIdsToDelete);
     }
@@ -178,7 +207,7 @@ const updateProduct = async (req, res) => {
       name, price, description, brand, category_id, count_in_stock, supplier_id, 
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors || [], sizes || [], is_highlighted, 
-      image_urls, public_ids || [], id
+      image_urls, public_ids, id
     ];
 
     const updatedProduct = await db.query(updateQuery, values);
