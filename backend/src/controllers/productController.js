@@ -46,12 +46,19 @@ const getProducts = async (req, res) => {
 
       const totalProductsQuery = await db.query(countQuery, params);
       const totalProducts = parseInt(totalProductsQuery.rows[0].count, 10);
-
       productsQuery += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
       const products = await db.query(productsQuery, [...params, limit, offset]);
 
+      // Ensure every product has a valid image URL array
+      const productsWithImages = products.rows.map(product => ({
+        ...product,
+        image_urls: (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls
+          : ['https://via.placeholder.com/500x500.png?text=No+Image']
+      }));
+
       return res.json({
-        products: products.rows,
+        products: productsWithImages,
         page,
         pages: Math.ceil(totalProducts / limit),
         total: totalProducts,
@@ -61,7 +68,15 @@ const getProducts = async (req, res) => {
       // Otherwise, return all products in a simple array for backward compatibility
       productsQuery += ' ORDER BY created_at DESC';
       const products = await db.query(productsQuery, params);
-      res.json(products.rows);
+
+      // Ensure every product has a valid image URL array
+      const productsWithImages = products.rows.map(product => ({
+        ...product,
+        image_urls: (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls
+          : ['https://via.placeholder.com/500x500.png?text=No+Image']
+      }));
+      res.json(productsWithImages);
     }
   } catch (error) {
     console.error(error.message);
@@ -105,51 +120,30 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
- 
-    // When using multipart/form-data, all body values are strings. We must parse them.
-    const { name, description, brand, category, estimated_delivery, colors, sizes } = req.body;
-    const price = parseFloat(req.body.price);
-    const count_in_stock = parseInt(req.body.count_in_stock, 10);
-    const supplier_id = parseInt(req.body.supplier_id, 10);
-    const discounted_price = req.body.discounted_price ? parseFloat(req.body.discounted_price) : null;
-
-    // Convert string 'true'/'false' to boolean
-    const is_deal_of_the_day = req.body.is_deal_of_the_day === 'true';
-    const is_flash_sale = req.body.is_flash_sale === 'true';
-    const is_new_arrival = req.body.is_new_arrival === 'true';
-    const has_free_delivery = req.body.has_free_delivery === 'true';
-    const is_highlighted = req.body.is_highlighted === 'true';
+    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
     // Basic validation for required fields.
     const errors = [];
     if (!name) errors.push('Product name is required.');
-    if (!description) errors.push('Description is required.');
-    if (!brand) errors.push('Brand is required.');
-    if (!category) errors.push('Category is required.');
-    if (isNaN(price)) errors.push('A valid price is required.');
-    if (isNaN(count_in_stock)) errors.push('Stock quantity is required.');
-    if (isNaN(supplier_id)) errors.push('Supplier ID is required.');
+    if (price === undefined) errors.push('A valid price is required.');
+    if (count_in_stock === undefined) errors.push('Stock quantity is required.');
+    if (supplier_id === undefined) errors.push('Supplier is required.');
 
     if (errors.length > 0) {
       return res.status(400).json({ message: errors.join(' ') });
     }
  
-    let imageUrls = ['https://via.placeholder.com/500x500.png?text=No+Image']; // A default placeholder
-
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
-      const uploadResults = await Promise.all(uploadPromises);
-      imageUrls = uploadResults.map(result => result.secure_url);
-    } else if (req.body.image_urls) { // Handle case where URLs are sent directly
-      imageUrls = Array.isArray(req.body.image_urls) ? req.body.image_urls : [req.body.image_urls];
-    }
+    // Use image_urls from the body, or a default if none are provided.
+    const finalImageUrls = (image_urls && image_urls.length > 0)
+      ? image_urls
+      : ['https://via.placeholder.com/500x500.png?text=No+Image'];
 
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, imageUrls]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -164,76 +158,33 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
   try {
-    const productId = req.params.id;
-
-    // 1. Fetch the existing product
-    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [productId]);
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    const product = productResult.rows[0];
-
-    // 2. Prepare the updated data, parsing types and using existing values as fallbacks
-    const data = {
-      name: req.body.name || product.name,
-      price: req.body.price ? parseFloat(req.body.price) : product.price,
-      description: req.body.description || product.description,
-      brand: req.body.brand || product.brand,
-      category: req.body.category || product.category,
-      count_in_stock: req.body.count_in_stock ? parseInt(req.body.count_in_stock, 10) : product.count_in_stock,
-      supplier_id: req.body.supplier_id ? parseInt(req.body.supplier_id, 10) : product.supplier_id,
-      is_deal_of_the_day: req.body.is_deal_of_the_day !== undefined ? req.body.is_deal_of_the_day === 'true' : product.is_deal_of_the_day,
-      is_flash_sale: req.body.is_flash_sale !== undefined ? req.body.is_flash_sale === 'true' : product.is_flash_sale,
-      is_new_arrival: req.body.is_new_arrival !== undefined ? req.body.is_new_arrival === 'true' : product.is_new_arrival,
-      discounted_price: req.body.discounted_price ? parseFloat(req.body.discounted_price) : product.discounted_price,
-      has_free_delivery: req.body.has_free_delivery !== undefined ? req.body.has_free_delivery === 'true' : product.has_free_delivery,
-      estimated_delivery: req.body.estimated_delivery || product.estimated_delivery,
-      colors: req.body.colors || product.colors,
-      sizes: req.body.sizes || product.sizes,
-      is_highlighted: req.body.is_highlighted !== undefined ? req.body.is_highlighted === 'true' : product.is_highlighted,
-      // If a new file is uploaded, convert it to Base64. Otherwise, keep the existing image URLs.
-      // Also, check if the existing URL is a local path and replace it if so.
-      image_urls: product.image_urls,
-    };
-
-    // If a new file is uploaded, upload it and replace the image_urls
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
-      const uploadResults = await Promise.all(uploadPromises);
-      data.image_urls = uploadResults.map(result => result.secure_url);
-    } else if (!data.image_urls || data.image_urls.some(url => url.startsWith('/uploads'))) {
-      // If no new files and existing URLs are invalid/local, use a placeholder.
-      data.image_urls = ['https://via.placeholder.com/500x500.png?text=No+Image'];
-    }
-
-    // 2.5 Validate the parsed data
-    const errors = [];
-    if (!data.name) errors.push('Product name cannot be empty.');
-    if (isNaN(data.price)) errors.push('Price must be a valid number.');
-    if (isNaN(data.count_in_stock)) errors.push('Stock quantity must be a valid number.');
-    if (isNaN(data.supplier_id)) errors.push('Supplier ID must be a valid number.');
-    if (data.discounted_price !== null && isNaN(data.discounted_price)) {
-      errors.push('Discounted price must be a valid number.');
-    }
-
-    if (errors.length > 0) {
-      return res.status(400).json({ message: errors.join(' ') });
-    }
-
-    // 3. Dynamically build the UPDATE query to only change the fields that were actually sent
-    const fields = Object.keys(data);
-    const setClauses = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
-    const values = Object.values(data);
+    // Since the frontend sends the full product object, we can perform a direct update.
+    const { id } = req.params;
+    const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
 
     const updateQuery = `
-      UPDATE products 
-      SET ${setClauses} 
-      WHERE id = $${fields.length + 1} 
+      UPDATE products SET 
+        name = $1, price = $2, description = $3, brand = $4, category = $5, 
+        count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, 
+        is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, 
+        has_free_delivery = $12, estimated_delivery = $13, colors = $14, 
+        sizes = $15, is_highlighted = $16, image_urls = $17
+      WHERE id = $18 
       RETURNING *
     `;
 
-    // 4. Execute the query
-    const updatedProduct = await db.query(updateQuery, [...values, productId]);
+    const values = [
+      name, price, description, brand, category, count_in_stock, supplier_id, 
+      is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
+      has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
+      image_urls, id
+    ];
+
+    const updatedProduct = await db.query(updateQuery, values);
+
+    if (updatedProduct.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
 
     res.json(updatedProduct.rows[0]);
   } catch (error) {
