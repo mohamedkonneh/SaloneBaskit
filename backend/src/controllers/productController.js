@@ -134,11 +134,11 @@ const createProduct = async (req, res) => {
     }
 
     // Derive public_ids from the image_urls
-    const public_ids = image_urls.map(url => { // e.g., 'image.jpg'
-      const parts = url.split('/'); // e.g., 'product_images'
-      const filename = parts.pop();
-      const folder = parts.pop();
-      return `${folder}/${filename.substring(0, filename.lastIndexOf('.'))}`;
+    const public_ids = image_urls.map(url => {
+      const urlParts = url.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      // Take everything after 'upload', remove version, join, and remove file extension.
+      return urlParts.slice(uploadIndex + 2).join('/').replace(/\.\w+$/, '');
     });
 
     const newProductQuery = `
@@ -190,11 +190,10 @@ const updateProduct = async (req, res) => {
     }
 
     // Derive public_ids from the image_urls
-    const public_ids = image_urls.map(url => { // e.g., 'image.jpg'
-      const parts = url.split('/'); // e.g., 'product_images'
-      const filename = parts.pop();
-      const folder = parts.pop();
-      return `${folder}/${filename.substring(0, filename.lastIndexOf('.'))}`;
+    const public_ids = image_urls.map(url => {
+      const urlParts = url.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      return urlParts.slice(uploadIndex + 2).join('/').replace(/\.\w+$/, '');
     });
     // 3. Determine which images to delete from Cloudinary
     const publicIdsToDelete = currentPublicIds.filter(id => !public_ids.includes(id));
