@@ -112,20 +112,20 @@ const createProduct = async (req, res) => {
     if (supplier_id === undefined) errors.push('Supplier is required.');
 
     if (errors.length > 0) {
-      return res.status(400).json({ message: errors.join(' ') });
+      return res.status(400).json({ message: errors.join(' '), errors });
     }
  
-    // Use image_urls from the body, or a default if none are provided.
-    const finalImageUrls = (image_urls && image_urls.length > 0)
-      ? image_urls
-      : ['https://via.placeholder.com/500x500.png?text=No+Image'];
+    // Enforce that at least one image URL is provided.
+    if (!image_urls || image_urls.length === 0) {
+      return res.status(400).json({ message: 'At least one product image is required.' });
+    }
 
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, finalImageUrls]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -143,6 +143,11 @@ const updateProduct = async (req, res) => {
     // Since the frontend sends the full product object, we can perform a direct update.
     const { id } = req.params;
     const { name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+
+    // Enforce that at least one image URL is provided during an update.
+    if (!image_urls || image_urls.length === 0) {
+      return res.status(400).json({ message: 'Product must have at least one image.' });
+    }
 
     const updateQuery = `
       UPDATE products SET 
