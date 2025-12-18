@@ -103,7 +103,7 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids } = req.body;
 
     // Basic validation for required fields.
     const errors = [];
@@ -120,18 +120,6 @@ const createProduct = async (req, res) => {
     if (!image_urls || !Array.isArray(image_urls) || image_urls.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
-
-    // Derive public_ids from the image_urls
-    const public_ids = image_urls.map(url => {
-      // Only process valid Cloudinary URLs
-      if (url.includes('res.cloudinary.com')) {
-        const urlParts = url.split('/');
-        const uploadIndex = urlParts.indexOf('upload');
-        // Slice after the version number (if present) or after 'upload'
-        return urlParts.slice(uploadIndex + (urlParts[uploadIndex + 1].startsWith('v') ? 2 : 1)).join('/').replace(/\.\w+$/, '');
-      }
-      return null; // Return null for non-Cloudinary URLs
-    });
 
     const newProductQuery = `
       INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
@@ -155,7 +143,7 @@ const updateProduct = async (req, res) => {
   try {
     // Since the frontend sends the full product object, we can perform a direct update.
     const { id } = req.params;
-    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids } = req.body;
     
     // Enforce that at least one image URL is provided during an update.
     if (!image_urls || !Array.isArray(image_urls) || image_urls.length === 0) {
@@ -169,15 +157,6 @@ const updateProduct = async (req, res) => {
     }
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
-    // Derive public_ids from the image_urls
-    const public_ids = image_urls.map(url => {
-      if (url.includes('res.cloudinary.com')) {
-        const urlParts = url.split('/');
-        const uploadIndex = urlParts.indexOf('upload');
-        return urlParts.slice(uploadIndex + (urlParts[uploadIndex + 1].startsWith('v') ? 2 : 1)).join('/').replace(/\.\w+$/, '');
-      }
-      return null;
-    });
     // Determine which images to delete from Cloudinary
     const publicIdsToDelete = currentPublicIds.filter(id => !public_ids.includes(id));
     if (publicIdsToDelete.length > 0) {
