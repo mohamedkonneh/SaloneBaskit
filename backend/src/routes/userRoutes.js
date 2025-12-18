@@ -1,22 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, getUsers, getUserProfile, updateUserProfile, deleteUser, getUserMailbox, uploadProfilePhoto } = require('../controllers/userController');
+const { registerUser, loginUser, getUsers, getUserProfile, updateUserProfile, deleteUser, getUserMailbox, updateUserProfilePhoto } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { validateRegistration, validateLogin, validateProfileUpdate } = require('../middleware/validationMiddleware');
-const { upload } = require('../middleware/uploadMiddleware'); // This is the multer instance
-
-// A wrapper middleware to handle multer errors gracefully
-const handleUpload = (req, res, next) => {
-  upload.single('photo')(req, res, function (err) {
-    if (err) {
-      // This catches errors from multer (e.g., file size) and our custom file filter
-      // The errorHandler in errorMiddleware.js is already set up to format these.
-      return next(err);
-    }
-    // If no error, proceed to the next middleware/controller
-    next();
-  });
-};
+const { handleUserPhotoUpload } = require('../middleware/userUploadMiddleware');
 
 
 // @route   POST /api/users/register
@@ -45,6 +32,6 @@ router.delete('/:id', protect, admin, deleteUser);
 router.get('/mailbox', protect, getUserMailbox);
 
 // @route   POST /api/users/profile/photo
-router.post('/profile/photo', protect, handleUpload, uploadProfilePhoto);
+router.post('/profile/photo', protect, handleUserPhotoUpload, updateUserProfilePhoto);
 
 module.exports = router;

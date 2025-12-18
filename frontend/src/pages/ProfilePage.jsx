@@ -118,7 +118,7 @@ const ProfilePage = () => {
       <div style={styles.layout(isMobile)}>
         <aside style={styles.profileCard}>
           <label htmlFor="photo-upload" style={styles.photoContainer}>
-            <img src={photoPreview || (userInfo?.photoUrl ? `${api.defaults.baseURL.replace(/\/$/, '')}${userInfo.photoUrl}` : defaultAvatar)} alt="Profile" style={styles.profilePhoto} />
+            <img src={photoPreview || userInfo?.photo_url || defaultAvatar} alt="Profile" style={styles.profilePhoto} />
             <div style={styles.photoOverlay}>
               {isUploading ? '...' : 'Edit'}
             </div>

@@ -3,6 +3,23 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cloudinary = require('../config/cloudinary');
 
+// Helper function to upload a file buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
+        folder: 'user_photos', // Organize user photos
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
@@ -179,44 +196,24 @@ const getUserMailbox = async (req, res) => {
   }
 };
 
-const uploadProfilePhoto = async (req, res) => {
+const updateUserProfilePhoto = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'Please upload an image file' });
+      return res.status(400).json({ message: 'No photo file provided.' });
     }
 
-    // Upload image to Cloudinary using a stream
-    const uploadStream = cloudinary.uploader.upload_stream({
-      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
-      folder: 'profile_photos', // Optional: organize uploads in Cloudinary
-    }, async (error, result) => {
-      if (error) {
-        console.error('Cloudinary upload error:', error);
-        return res.status(500).json({ message: 'Failed to upload image.' });
-      }
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer);
+    const photoUrl = result.secure_url;
 
-      const photoUrl = result.secure_url;
+    // Update user in the database
+    const updatedUser = await db.query('UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING *', [photoUrl, req.user.id]);
 
-      const updateQuery = 'UPDATE users SET photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, photo_url';
-      const updatedUserResult = await db.query(updateQuery, [photoUrl, req.user.id]);
-      const updatedUser = updatedUserResult.rows[0];
-
-      res.json({
-        id: updatedUser.id,
-        name: updatedUser.username,
-        email: updatedUser.email,
-        isAdmin: updatedUser.is_admin,
-        photoUrl: updatedUser.photo_url,
-        token: generateToken(updatedUser.id),
-      });
-    });
-
-    // Pipe the file buffer from memory into the upload stream
-    uploadStream.end(req.file.buffer);
+    res.json(updatedUser.rows[0]);
   } catch (error) {
-    console.error('Error uploading profile photo:', error);
-    res.status(500).json({ message: 'Server error during photo upload.' });
+    console.error('Photo upload error:', error);
+    res.status(500).json({ message: 'Failed to update profile photo.' });
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, getUsers, deleteUser, getUserMailbox, uploadProfilePhoto };
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, getUsers, deleteUser, getUserMailbox, updateUserProfilePhoto };
