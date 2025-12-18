@@ -19,7 +19,7 @@ const AdminProductListPage = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [formState, setFormState] = useState({
     name: '', description: '', image_url: '', brand: '', category: '',
-    price: '', count_in_stock: '', image_urls: [], // Use an array for images
+    price: '', count_in_stock: '', image_urls: [], public_ids: [],
     is_deal_of_the_day: false,
     supplier_id: '', // Add supplier_id to form state
     is_flash_sale: false,
@@ -104,7 +104,8 @@ const AdminProductListPage = () => {
       discounted_price: '',
       has_free_delivery: false,
       estimated_delivery: '',
-      image_urls: [],
+      image_urls: [], 
+      public_ids: [],
       colors: '',
       sizes: '',
     });
@@ -157,7 +158,8 @@ const AdminProductListPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let uploadedImageUrls = [];
+    // This will hold the new image data from the upload
+    let newImages = { urls: [], publicIds: [] };
 
     // Step 1: Check if a new file was selected for upload
     const imageFiles = fileInputRef.current.files;
@@ -169,7 +171,9 @@ const AdminProductListPage = () => {
       try {
         // The interceptor adds Authorization. We only need to specify Content-Type for file uploads.
         const { data } = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-        uploadedImageUrls = data.imageUrls; // Get the array of URLs from the server
+        // --- FIX: Read from `data.images` and extract url and public_id ---
+        newImages.urls = data.images.map(img => img.url);
+        newImages.publicIds = data.images.map(img => img.public_id);
       } catch (uploadError) {
         setError('Image upload failed.');
         return;
@@ -177,14 +181,17 @@ const AdminProductListPage = () => {
     }
     try {
       // When editing, we need to preserve the existing images that were not removed.
-      const finalImageUrls = editingProduct ? formState.image_urls : [];
+      const existingImageUrls = editingProduct ? formState.image_urls : [];
+      const existingPublicIds = editingProduct ? formState.public_ids || [] : []; // Handle case where public_ids might not exist on old products
       // Convert comma-separated strings to arrays, trimming whitespace and removing empty entries
       const colorsArray = formState.colors.split(',').map(c => c.trim()).filter(c => c);
       const sizesArray = formState.sizes.split(',').map(s => s.trim()).filter(s => s);
 
       const productData = { 
         ...formState, 
-        image_urls: [...finalImageUrls, ...uploadedImageUrls],
+        // Combine existing images with newly uploaded ones
+        image_urls: [...existingImageUrls, ...newImages.urls],
+        public_ids: [...existingPublicIds, ...newImages.publicIds],
         // Ensure brand name is synced with the selected supplier
         brand: suppliers.find(s => s.id === parseInt(formState.supplier_id))?.name || formState.brand,
         discounted_price: formState.discounted_price === '' ? null : formState.discounted_price,
