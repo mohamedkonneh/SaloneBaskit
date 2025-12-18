@@ -103,7 +103,7 @@ const getProductsBySupplier = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls } = req.body;
+    const { name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, images } = req.body;
 
     // Basic validation for required fields.
     const errors = [];
@@ -117,16 +117,20 @@ const createProduct = async (req, res) => {
     }
  
     // Enforce that at least one image URL is provided.
-    if (!image_urls || image_urls.length === 0) {
+    if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
 
+    // Extract URLs and Public IDs from the images array
+    const imageUrls = images.map(img => img.url);
+    const publicIds = images.map(img => img.public_id);
+
     const newProductQuery = `
-      INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls]);
+    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, imageUrls, publicIds]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
