@@ -1,4 +1,4 @@
-const { uploadToCloudinary } = require('../middleware/cloudinaryService');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 const uploadImages = async (req, res) => {
   if (!req.files || req.files.length === 0) {
