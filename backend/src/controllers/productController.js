@@ -174,6 +174,12 @@ const updateProduct = async (req, res) => {
     }
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
+    // Determine which images to delete from Cloudinary by comparing URL lists
+    const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
+    if (publicIdsToDelete.length > 0) {
+      await deleteFromCloudinary(publicIdsToDelete);
+    }
+
     const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
     if (categoryResult.rows.length === 0) {
       return res.status(400).json({ message: `Category with ID ${category_id} does not exist.` });
@@ -216,23 +222,28 @@ const updateProduct = async (req, res) => {
 // @access  Private/Admin
 const deleteProduct = async (req, res) => {
   const { id } = req.params;
+  const client = await db.getClient();
   try {
+    await client.query('BEGIN');
+
     // First, find the product to get its public_ids for deletion
-    const productResult = await db.query('SELECT public_ids FROM products WHERE id = $1', [id]);
+    const productResult = await client.query('SELECT public_ids FROM products WHERE id = $1', [id]);
 
     if (productResult.rows.length > 0 && productResult.rows[0].public_ids) {
-      const publicIdsToDelete = productResult.rows[0].public_ids;
-      if (publicIdsToDelete.length > 0) {
-        await deleteFromCloudinary(publicIdsToDelete);
-      }
+      await deleteFromCloudinary(productResult.rows[0].public_ids);
     }
 
     // Finally, delete the product from the database
-    await db.query('DELETE FROM products WHERE id = $1', [req.params.id]);
+    await client.query('DELETE FROM products WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
     res.json({ message: 'Product removed' });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error(`Error deleting product ${id}:`, error);
     res.status(500).json({ message: 'Failed to delete product.' });
+  } finally {
+    client.release();
   }
 };
 
