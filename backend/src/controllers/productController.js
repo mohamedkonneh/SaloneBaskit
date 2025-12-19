@@ -33,12 +33,14 @@ const getProducts = async (req, res) => {
       const products = await db.query(productsQuery, [...params, limit, offset]);
 
       // Ensure every product has a valid image URL array
-      const productsWithImages = products.rows.map(product => ({
-        ...product,
-        image_urls: (product.image_urls && product.image_urls.length > 0)
-          ? product.image_urls
-          : ['https://via.placeholder.com/500x500.png?text=No+Image']
-      }));
+      const productsWithImages = products.rows.map(product => {
+        const images = (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls.map((url, i) => ({ url, public_id: product.public_ids ? product.public_ids[i] : null }))
+          : [{ url: 'https://via.placeholder.com/500x500.png?text=No+Image', public_id: null }];
+        delete product.image_urls;
+        delete product.public_ids;
+        return { ...product, images };
+      });
 
       return res.json({
         products: productsWithImages,
@@ -53,12 +55,14 @@ const getProducts = async (req, res) => {
       const products = await db.query(productsQuery, params);
 
       // Ensure every product has a valid image URL array
-      const productsWithImages = products.rows.map(product => ({
-        ...product,
-        image_urls: (product.image_urls && product.image_urls.length > 0)
-          ? product.image_urls
-          : ['https://via.placeholder.com/500x500.png?text=No+Image']
-      }));
+      const productsWithImages = products.rows.map(product => {
+        const images = (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls.map((url, i) => ({ url, public_id: product.public_ids ? product.public_ids[i] : null }))
+          : [{ url: 'https://via.placeholder.com/500x500.png?text=No+Image', public_id: null }];
+        delete product.image_urls;
+        delete product.public_ids;
+        return { ...product, images };
+      });
       res.json(productsWithImages);
     }
   } catch (error) {
@@ -75,12 +79,13 @@ const getProductById = async (req, res) => {
     const product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
     if (product.rows.length > 0) {
       const singleProduct = product.rows[0];
-      // Ensure the product always has a valid image_urls array, even if it's a placeholder.
-      singleProduct.image_urls = (singleProduct.image_urls && singleProduct.image_urls.length > 0)
-        ? singleProduct.image_urls
-        : ['https://via.placeholder.com/500x500.png?text=No+Image'];
-
-      res.json(singleProduct);
+      // Construct the 'images' array to match the frontend's expected data structure
+      const images = (singleProduct.image_urls && singleProduct.image_urls.length > 0)
+        ? singleProduct.image_urls.map((url, i) => ({ url, public_id: singleProduct.public_ids ? singleProduct.public_ids[i] : null }))
+        : [];
+      delete singleProduct.image_urls;
+      delete singleProduct.public_ids;
+      res.json({ ...singleProduct, images });
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
@@ -135,14 +140,14 @@ const createProduct = async (req, res) => {
     const categoryName = categoryResult.rows[0].name;
 
     const newProductQuery = `
-      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
     const newProduct = await db.query(newProductQuery, [
       name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, 
-      estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids
+      estimated_delivery, colors, sizes, is_highlighted, image_urls
     ]);
  
     res.status(201).json(newProduct.rows[0]);
@@ -167,19 +172,20 @@ const updateProduct = async (req, res) => {
       return res.status(400).json({ message: 'Product must have at least one image.' });
     }
 
-    // Get the current public_ids from the database to determine which images to delete
+    // 1. Get the current public_ids from the database to compare
     const currentProductResult = await db.query('SELECT public_ids FROM products WHERE id = $1', [id]);
     if (currentProductResult.rows.length === 0) {
       return res.status(404).json({ message: 'Product not found.' });
     }
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
-    // Determine which images to delete from Cloudinary by comparing URL lists
-    const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
-    if (publicIdsToDelete.length > 0) {
-      await deleteFromCloudinary(publicIdsToDelete);
-    }
+    // Determine which images to delete from Cloudinary
+    // const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
+    // if (publicIdsToDelete.length > 0) {
+    //   await deleteFromCloudinary(publicIdsToDelete);
+    // }
 
+    // Look up category name from the provided category_id
     const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
     if (categoryResult.rows.length === 0) {
       return res.status(400).json({ message: `Category with ID ${category_id} does not exist.` });
@@ -192,8 +198,8 @@ const updateProduct = async (req, res) => {
         count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, 
         is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, 
         has_free_delivery = $12, estimated_delivery = $13, colors = $14, 
-        sizes = $15, is_highlighted = $16, image_urls = $17, public_ids = $18
-      WHERE id = $19 
+        sizes = $15, is_highlighted = $16, image_urls = $17
+      WHERE id = $18 
       RETURNING *
     `;
 
@@ -201,7 +207,7 @@ const updateProduct = async (req, res) => {
       name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
-      image_urls, public_ids, id
+      image_urls, id
     ];
 
     const updatedProduct = await db.query(updateQuery, values);
@@ -222,28 +228,26 @@ const updateProduct = async (req, res) => {
 // @access  Private/Admin
 const deleteProduct = async (req, res) => {
   const { id } = req.params;
-  const client = await db.getClient();
-  try {
-    await client.query('BEGIN');
+  try { 
+    // First, find the product to get its image URLs for deletion
+    const productResult = await db.query('SELECT image_urls FROM products WHERE id = $1', [id]);
 
-    // First, find the product to get its public_ids for deletion
-    const productResult = await client.query('SELECT public_ids FROM products WHERE id = $1', [id]);
-
-    if (productResult.rows.length > 0 && productResult.rows[0].public_ids) {
-      await deleteFromCloudinary(productResult.rows[0].public_ids);
+    if (productResult.rows.length > 0 && productResult.rows[0].image_urls) {
+      const imageUrls = productResult.rows[0].image_urls;
+      // Fallback to deriving public_id from URL for deletion
+      const publicIdsToDelete = imageUrls.map(url => {
+        const parts = url.split('/');
+        return parts.slice(parts.indexOf('product_images')).join('/').replace(/\.\w+$/, '');
+      }).filter(id => id);
+      await deleteFromCloudinary(publicIdsToDelete);
     }
 
     // Finally, delete the product from the database
-    await client.query('DELETE FROM products WHERE id = $1', [id]);
-
-    await client.query('COMMIT');
+    await db.query('DELETE FROM products WHERE id = $1', [req.params.id]);
     res.json({ message: 'Product removed' });
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error(`Error deleting product ${id}:`, error);
     res.status(500).json({ message: 'Failed to delete product.' });
-  } finally {
-    client.release();
   }
 };
 
