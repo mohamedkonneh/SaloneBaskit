@@ -121,12 +121,23 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
 
+    // Look up category name from the provided category_id
+    const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
+    if (categoryResult.rows.length === 0) {
+      return res.status(400).json({ message: `Category with ID ${category_id} does not exist.` });
+    }
+    const categoryName = categoryResult.rows[0].name;
+
     const newProductQuery = `
-      INSERT INTO products (name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
+      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
-    const newProduct = await db.query(newProductQuery, [name, price, description, brand, category_id, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids]);
+    const newProduct = await db.query(newProductQuery, [
+      name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
+      is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, 
+      estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids
+    ]);
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
@@ -163,9 +174,16 @@ const updateProduct = async (req, res) => {
       await deleteFromCloudinary(publicIdsToDelete);
     }
 
+    // Look up category name from the provided category_id
+    const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
+    if (categoryResult.rows.length === 0) {
+      return res.status(400).json({ message: `Category with ID ${category_id} does not exist.` });
+    }
+    const categoryName = categoryResult.rows[0].name;
+
     const updateQuery = `
       UPDATE products SET 
-        name = $1, price = $2, description = $3, brand = $4, category_id = $5, 
+        name = $1, price = $2, description = $3, brand = $4, category = $5,
         count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, 
         is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, 
         has_free_delivery = $12, estimated_delivery = $13, colors = $14, 
@@ -175,7 +193,7 @@ const updateProduct = async (req, res) => {
     `;
 
     const values = [
-      name, price, description, brand, category_id, count_in_stock, supplier_id, 
+      name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
       image_urls, public_ids, id
