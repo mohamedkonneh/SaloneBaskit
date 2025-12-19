@@ -74,7 +74,13 @@ const getProductById = async (req, res) => {
   try {
     const product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
     if (product.rows.length > 0) {
-      res.json(product.rows[0]);
+      const singleProduct = product.rows[0];
+      // Ensure the product always has a valid image_urls array, even if it's a placeholder.
+      singleProduct.image_urls = (singleProduct.image_urls && singleProduct.image_urls.length > 0)
+        ? singleProduct.image_urls
+        : ['https://via.placeholder.com/500x500.png?text=No+Image'];
+
+      res.json(singleProduct);
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
