@@ -167,18 +167,19 @@ const updateProduct = async (req, res) => {
       return res.status(400).json({ message: 'Product must have at least one image.' });
     }
 
-    // 1. Get the current public_ids from the database to compare
-    const currentProductResult = await db.query('SELECT public_ids FROM products WHERE id = $1', [id]);
+    // Get the current image URLs from the database to determine which images to delete
+    const currentProductResult = await db.query('SELECT image_urls FROM products WHERE id = $1', [id]);
     if (currentProductResult.rows.length === 0) {
       return res.status(404).json({ message: 'Product not found.' });
     }
-    const currentPublicIds = currentProductResult.rows[0].public_ids || [];
+    const currentImageUrls = currentProductResult.rows[0].image_urls || [];
 
     // Determine which images to delete from Cloudinary
-    // const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
-    // if (publicIdsToDelete.length > 0) {
-    //   await deleteFromCloudinary(publicIdsToDelete);
-    // }
+    const urlsToDelete = currentImageUrls.filter(url => !image_urls.includes(url));
+    if (urlsToDelete.length > 0) {
+      const publicIdsToDelete = urlsToDelete.map(url => url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.')));
+      await deleteFromCloudinary(publicIdsToDelete);
+    }
 
     // Look up category name from the provided category_id
     const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
