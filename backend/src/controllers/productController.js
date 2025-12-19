@@ -130,7 +130,7 @@ const createProduct = async (req, res) => {
  
     res.status(201).json(newProduct.rows[0]);
   } catch (error) {
-    console.error('Error creating product:', { errorMessage: error.message, requestBody: req.body });
+    console.error('Error creating product:', { errorMessage: error.message, stack: error.stack, requestBody: req.body });
     // Use the centralized error handler for a consistent JSON response
     res.status(500).json({ message: 'An internal error occurred while saving the product.' });
   }
@@ -158,7 +158,7 @@ const updateProduct = async (req, res) => {
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
     // Determine which images to delete from Cloudinary
-    const publicIdsToDelete = currentPublicIds.filter(id => !public_ids.includes(id));
+    const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
     if (publicIdsToDelete.length > 0) {
       await deleteFromCloudinary(publicIdsToDelete);
     }
@@ -189,7 +189,7 @@ const updateProduct = async (req, res) => {
 
     res.json(updatedProduct.rows[0]);
   } catch (error) {
-    console.error('Error updating product:', { errorMessage: error.message, requestBody: req.body });
+    console.error('Error updating product:', { errorMessage: error.message, stack: error.stack, requestBody: req.body });
     res.status(500).json({ message: 'An internal error occurred while updating the product.' });
   }
 };
