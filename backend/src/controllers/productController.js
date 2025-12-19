@@ -129,14 +129,14 @@ const createProduct = async (req, res) => {
     const categoryName = categoryResult.rows[0].name;
 
     const newProductQuery = `
-      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      INSERT INTO products (name, price, description, brand, category, count_in_stock, supplier_id, is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, image_urls)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
     const newProduct = await db.query(newProductQuery, [
       name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, has_free_delivery, 
-      estimated_delivery, colors, sizes, is_highlighted, image_urls, public_ids
+      estimated_delivery, colors, sizes, is_highlighted, image_urls
     ]);
  
     res.status(201).json(newProduct.rows[0]);
@@ -169,10 +169,10 @@ const updateProduct = async (req, res) => {
     const currentPublicIds = currentProductResult.rows[0].public_ids || [];
 
     // Determine which images to delete from Cloudinary
-    const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
-    if (publicIdsToDelete.length > 0) {
-      await deleteFromCloudinary(publicIdsToDelete);
-    }
+    // const publicIdsToDelete = currentPublicIds.filter(id => !(public_ids || []).includes(id));
+    // if (publicIdsToDelete.length > 0) {
+    //   await deleteFromCloudinary(publicIdsToDelete);
+    // }
 
     // Look up category name from the provided category_id
     const categoryResult = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
@@ -187,8 +187,8 @@ const updateProduct = async (req, res) => {
         count_in_stock = $6, supplier_id = $7, is_deal_of_the_day = $8, 
         is_flash_sale = $9, is_new_arrival = $10, discounted_price = $11, 
         has_free_delivery = $12, estimated_delivery = $13, colors = $14, 
-        sizes = $15, is_highlighted = $16, image_urls = $17, public_ids = $18
-      WHERE id = $19 
+        sizes = $15, is_highlighted = $16, image_urls = $17
+      WHERE id = $18 
       RETURNING *
     `;
 
@@ -196,7 +196,7 @@ const updateProduct = async (req, res) => {
       name, parseFloat(price), description, brand, categoryName, parseInt(count_in_stock, 10), supplier_id,
       is_deal_of_the_day, is_flash_sale, is_new_arrival, discounted_price, 
       has_free_delivery, estimated_delivery, colors, sizes, is_highlighted, 
-      image_urls, public_ids, id
+      image_urls, id
     ];
 
     const updatedProduct = await db.query(updateQuery, values);
@@ -218,18 +218,18 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   const { id } = req.params;
   try { 
-    // First, find the product to get its public_ids
-    const productResult = await db.query('SELECT public_ids FROM products WHERE id = $1', [id]);
+    // First, find the product to get its image URLs for deletion
+    const productResult = await db.query('SELECT image_urls FROM products WHERE id = $1', [id]);
 
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ message: 'Product not found.' });
+    if (productResult.rows.length > 0 && productResult.rows[0].image_urls) {
+      const imageUrls = productResult.rows[0].image_urls;
+      // Fallback to deriving public_id from URL for deletion
+      const publicIdsToDelete = imageUrls.map(url => {
+        const parts = url.split('/');
+        return parts.slice(parts.indexOf('product_images')).join('/').replace(/\.\w+$/, '');
+      }).filter(id => id);
+      await deleteFromCloudinary(publicIdsToDelete);
     }
-
-    const publicIds = productResult.rows[0].public_ids;
-    // If there are images, delete them from Cloudinary using the stored public_ids
-    if (publicIds && publicIds.length > 0) {
-      await deleteFromCloudinary(publicIds);
-    } 
 
     // Finally, delete the product from the database
     await db.query('DELETE FROM products WHERE id = $1', [req.params.id]);
