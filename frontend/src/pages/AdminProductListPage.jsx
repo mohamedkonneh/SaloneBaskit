@@ -135,7 +135,8 @@ const AdminProductListPage = () => {
       colors: product.colors ? product.colors.join(', ') : '', // Convert array to string
       sizes: product.sizes ? product.sizes.join(', ') : '',   // Convert array to string
     });
-    setImagePreviews(product.image_urls ? product.image_urls.map(url => `http://localhost:5000${url}`) : []);
+    // The URLs from the database are already absolute Cloudinary URLs.
+    setImagePreviews(product.image_urls || []);
     setIsModalOpen(true);
   };
 
