@@ -33,14 +33,12 @@ const getProducts = async (req, res) => {
       const products = await db.query(productsQuery, [...params, limit, offset]);
 
       // Ensure every product has a valid image URL array
-      const productsWithImages = products.rows.map(product => {
-        const images = (product.image_urls && product.image_urls.length > 0)
-          ? product.image_urls.map((url, i) => ({ url, public_id: product.public_ids ? product.public_ids[i] : null }))
-          : [{ url: 'https://via.placeholder.com/500x500.png?text=No+Image', public_id: null }];
-        delete product.image_urls;
-        delete product.public_ids;
-        return { ...product, images };
-      });
+      const productsWithImages = products.rows.map(product => ({
+        ...product,
+        image_urls: (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls
+          : ['https://via.placeholder.com/500x500.png?text=No+Image']
+      }));
 
       return res.json({
         products: productsWithImages,
@@ -55,14 +53,12 @@ const getProducts = async (req, res) => {
       const products = await db.query(productsQuery, params);
 
       // Ensure every product has a valid image URL array
-      const productsWithImages = products.rows.map(product => {
-        const images = (product.image_urls && product.image_urls.length > 0)
-          ? product.image_urls.map((url, i) => ({ url, public_id: product.public_ids ? product.public_ids[i] : null }))
-          : [{ url: 'https://via.placeholder.com/500x500.png?text=No+Image', public_id: null }];
-        delete product.image_urls;
-        delete product.public_ids;
-        return { ...product, images };
-      });
+      const productsWithImages = products.rows.map(product => ({
+        ...product,
+        image_urls: (product.image_urls && product.image_urls.length > 0)
+          ? product.image_urls
+          : ['https://via.placeholder.com/500x500.png?text=No+Image']
+      }));
       res.json(productsWithImages);
     }
   } catch (error) {
@@ -78,14 +74,7 @@ const getProductById = async (req, res) => {
   try {
     const product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
     if (product.rows.length > 0) {
-      const singleProduct = product.rows[0];
-      // Construct the 'images' array to match the frontend's expected data structure
-      const images = (singleProduct.image_urls && singleProduct.image_urls.length > 0)
-        ? singleProduct.image_urls.map((url, i) => ({ url, public_id: singleProduct.public_ids ? singleProduct.public_ids[i] : null }))
-        : [];
-      delete singleProduct.image_urls;
-      delete singleProduct.public_ids;
-      res.json({ ...singleProduct, images });
+      res.json(product.rows[0]);
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
